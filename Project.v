@@ -1,4 +1,4 @@
-Require Import Arith.
+ Require Import Arith.
 
 Require Import Le.
 Require Import Lt.
@@ -49,6 +49,7 @@ of the namespace if we assume that's v is not in newt.*)
       | fall rank sp => fall rank (tsubst sp (v+1) (shift newt 0)) 
                              
    end.
+ 
 
 Inductive term :=
   | vart : nat -> term
@@ -58,5 +59,34 @@ Inductive term :=
   | applt: term -> typ -> term.
 (*We have also de Bruinj indexes for dependent types. They are mixed 
 with standards indexes.*)
+
+Fixpoint shiftTrmInTrm (t:term) (v:nat) : term :=
+   match t with
+       | vart i   =>  vart (if le_gt_dec v i then 1 + i else i  )
+       | abst tp trm  => abst tp (shiftTrmInTrm trm (v+1)) 
+       | app trm1 trm2  => app (shiftTrmInTrm trm1 v) (shiftTrmInTrm trm2 v)
+       | dept i trm => dept i (shiftTrmInTrm trm v) 
+       | applt trm tp =>  applt (shiftTrmInTrm trm v) tp
+   end.
+
+Fixpoint shiftTpInTrm (t:term) (v:nat) : term :=
+   match t with
+       | vart i   =>  vart (if le_gt_dec v i then 1 + i else i  )
+       | abst tp trm  => abst tp (shiftTpInTrm trm v) 
+       | app trm1 trm2  => app (shiftTpInTrm trm1 v) (shiftTpInTrm trm2 v)
+       | dept i trm => dept i (shiftTpInTrm trm (v+1)) 
+       | applt trm tp =>  applt (shiftTpInTrm trm v) tp
+   end.
+
+Fixpoint substTypInTerm (trm:term) (v:nat) (newt :typ) := 
+  match trm with
+      | vart l => vart l 
+      | abst tp trm => abst (tsubst tp v newt) (substTypInTerm trm v newt)
+      | app trm1 trm2 => app (substTypInTerm trm1 v newt) (substTypInTerm trm2 v newt)
+      | dept i trm => dept i (substTypInTerm trm (v+1) (shift newt 0))
+      | applt trm tp => applt (substTypInTerm trm v newt) (tsubst tp v newt)                        
+   end.
+
+
 
 
