@@ -57,8 +57,7 @@ Inductive term :=
   | app : term -> term -> term
   | dept : nat -> term -> term
   | applt: term -> typ -> term.
-(*We have also de Bruinj indexes for dependent types. They are mixed 
-with standards indexes.*)
+
 
 Fixpoint shiftTrmInTrm (t:term) (v:nat) : term :=
    match t with
@@ -84,9 +83,21 @@ Fixpoint substTypInTerm (trm:term) (v:nat) (newt :typ) :=
       | abst tp trm => abst (tsubst tp v newt) (substTypInTerm trm v newt)
       | app trm1 trm2 => app (substTypInTerm trm1 v newt) (substTypInTerm trm2 v newt)
       | dept i trm => dept i (substTypInTerm trm (v+1) (shift newt 0))
-      | applt trm tp => applt (substTypInTerm trm v newt) (tsubst tp v newt)                        
+(*We need to bound FTV correctly, so we shift each time we cross a forall*)
+      | applt trm tp => applt (substTypInTerm trm v newt) (tsubst tp v newt)
    end.
 
 
+
+Fixpoint substTermInTerm (trm:term) (v:nat) (newt : term) :=
+  match trm with
+    | vart l => if beq_nat l v then newt
+                 else vart l
+    | abst tp trm => abst tp (substTermInTerm trm (v+1) (shiftTrmInTrm newt 0))
+    | app trm1 trm2 => app (substTermInTerm trm1 v newt) (substTermInTerm trm2 v newt)
+    | dept i trm => dept i (substTermInTerm trm v (shiftTpInTrm newt 0))
+    (* We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
+    | applt trm tp => applt (substTermInTerm trm v newt) tp
+  end.
 
 
