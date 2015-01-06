@@ -111,26 +111,41 @@ Inductive env :=
   | v_typ : nat -> env -> env
   | v : typ -> env -> env.
 
-Fixpoint get_typ (i:nat) e:=
+Fixpoint get_typ e (i:nat) :=
   match e with
       | empty => None
-      | v_typ k tl => get_typ i tl
+      | v_typ k tl => get_typ tl i
       | v t tl => match i with
                       | 0 => Some t
-                      | S x => get_typ x tl
+                      | S x => get_typ tl x
                   end
   end.
 
-Fixpoint get_kind (i:nat) e:=
+Fixpoint get_kind e (i:nat) :=
   match e with
       | empty => None
       | v_typ k tl => match i with
                           | 0 => Some k
-                          | S x => get_kind x tl 
+                          | S x => get_kind tl x 
                       end
 
-      | v t tl => get_kind i tl
+      | v t tl => get_kind tl i
   end.
                   
+(*Comes from subject*)
+Fixpoint wf_typ (e : env) (T : typ) {struct T} : Prop :=
+  match T with
+  | vart X      => get_kind e X <> None
+  | arrow T1 T2 => wf_typ e T1 /\ wf_typ e T2
+  | fall k T2   => wf_typ (v_typ k e) T2 
+  end.
+
+Fixpoint wf_env (e : env) : Prop :=
+  match e with
+  |  empty      => True
+  | v T e   => wf_typ e T /\ wf_env e
+  | v_typ T e => wf_env e
+  end.
+
                                       
                    
