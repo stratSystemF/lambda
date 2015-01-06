@@ -11,16 +11,7 @@ Inductive typ :=
   | vart : nat -> typ
   | arrow : typ -> typ -> typ
   | fall : nat -> typ -> typ.
-
-Fixpoint eq_typs (a:typ) (b:typ) : bool :=
-  match (a,b) with
-      | (vart i, vart j) => beq_nat i j
-      | (arrow a b,arrow c d) => andb (eq_typs a c) (eq_typs b d)
-      | (fall i t, fall j t') => eq_typs t t'
-(*We are not sure about the previous line*)
-      | (_,_) => false
-end.
-(*  Rank, secondePart*)
+       (* Rank -> term*)
 
 (* Idea : de Bruinj indexes to carry bounded variables
 and free variables. So we talk globally of a first freevariabe,
@@ -67,15 +58,6 @@ Inductive term :=
   | dept : nat -> term -> term
   | applt: term -> typ -> term.
 
-Fixpoint eq_terms (t:term) (t':term) :=
-  match (t,t') with
-    | (var a, var b) => beq_nat a b
-(*The following code is probably useless and may be not correct. We use a typeerasing semantic*)
-    | (abst tp trm, abst tp' trm') => eq_trms trm trm'
-                               
-    | (app trm1 trm2, app trm1' trm2')=> andb (eq_terms trm1 trm1') (eq_terms trm2 trm2')
-    | (dept _ trm, dept _ trm' ) => eq_terms trm trm'
-    | (applt trm tp, applt trm' tp') => eq_terms trm trm' 
 
 Fixpoint shift (t:term) (v:nat) : term :=
    match t with
@@ -122,31 +104,33 @@ Require Import List.
 Import ListNotations.
 
 
+(*We use an array indexed by de Bruinj indexes*)
 
-Inductive env_atom  :=
-| v : term -> typ -> env_atom
-|v_typ : typ -> nat -> env_atom.
-(*Note this definition could change*)
+Inductive env :=
+  | empty : env
+  | v_typ : nat -> env -> env
+  | v : typ -> env -> env.
 
-(* Parameter environment : list env_atom. *)
-(*Question : how does it work?*)
+Fixpoint get_typ (i:nat) e:=
+  match e with
+      | empty => None
+      | v_typ k tl => get_typ i tl
+      | v t tl => match i with
+                      | 0 => Some t
+                      | S x => get_typ x tl
+                  end
+  end.
 
-Fixpoint get_typ (t:term) (env: list env_atom) : option typ :=
-match env with
-    | nil => None
-    | cons (v trm tp) tl => if eq_trms trm t then
-                              Some tp
-                            else get_typ t tl
-    | cons (v_typ tp k) tl => get_typ t tl    
-end.
+Fixpoint get_kind (i:nat) e:=
+  match e with
+      | empty => None
+      | v_typ k tl => match i with
+                          | 0 => Some k
+                          | S x => get_kind x tl 
+                      end
 
-Fixpoint get_kind (t:typ) (env: list env_atom) : option nat :=
-match env with
-    | nil => None
-    | cons (v trm tp) tl => get_typ t tl
-    | cons (v_typ tp k) tl => if eq_typs tp t then
-                                Some k
-                              else get_typ t tl    
-end.
-
-
+      | v t tl => get_kind i tl
+  end.
+                  
+                                      
+                   
