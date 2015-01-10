@@ -21,7 +21,7 @@ Inductive typ :=
  * v being the top of the stack
  *)
 
-(* The following function shifts the free variables by one within the type t.
+(* The following function shifts the free type variables by one within the type t.
  * v is the number of bounded variables - ie number of type abstractions - in t.
  *)
 Fixpoint tshift (t:typ) (v:nat) : typ := 
@@ -61,11 +61,13 @@ Inductive term :=
 (* The latter nat is the kind of the type which is abstracted. *)
   | applt: term -> typ -> term.
 
-
+(* The following function shifts the free term variables by one within the term t.
+ * v is the number of bounded variables - ie number of lambda abstractions - in t.
+ *)
 Fixpoint shift (t:term) (v:nat) : term :=
    match t with
        | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
-       | abs tp trm  => abs tp (shift trm (v+1)) 
+       | abs tp trm  => abs tp (shift trm (1 + v)) 
        | app trm1 trm2  => app (shift trm1 v) (shift trm2 v)
        | dept i trm => dept i (shift trm v) 
        | applt trm tp =>  applt (shift trm v) tp
