@@ -73,12 +73,15 @@ Fixpoint shift (t:term) (v:nat) : term :=
        | applt trm tp =>  applt (shift trm v) tp
    end.
 
+(* The following function shifts the free type variables by one within the term t.
+ * v is the number of bounded variables - ie number of type abstractions - in t.
+ *)
 Fixpoint shift_typ (t:term) (v:nat) : term :=
    match t with
        | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
        | abs tp trm  => abs tp (shift_typ trm v) 
        | app trm1 trm2  => app (shift_typ trm1 v) (shift_typ trm2 v)
-       | dept i trm => dept i (shift_typ trm (v+1)) 
+       | dept i trm => dept i (shift_typ trm (1 + v)) 
        | applt trm tp =>  applt (shift_typ trm v) tp
    end.
 
@@ -92,12 +95,19 @@ Fixpoint subst_typ (trm:term) (v:nat) (newt :typ) :=
       | applt trm tp => applt (subst_typ trm v newt) (tsubst tp v newt)
    end.
 
-
-
+(* The following function substitutes the term variable number v by newt inside t.
+ * It is assumed that v is removed from the environment stack
+ * and, as always, it is assumed that v does not appear in newt.
+ *)
 Fixpoint subst (trm:term) (v:nat) (newt : term) :=
   match trm with
-    | var l => if beq_nat l v then newt
-                 else var l
+    | var l =>
+        if beq_nat l v then newt
+        else if le_gt_dec l v then (*That's a variable before the target variable*) 
+          var l
+        else (* That's a free variable, but we have a hole (we removed the variable)
+              * so we need to garbage collect the name of this variable. *)
+          var (l-1)
     | abs tp trm => abs tp (subst trm (v+1) (shift newt 0))
     | app trm1 trm2 => app (subst trm1 v newt) (subst trm2 v newt)
     | dept i trm => dept i (subst trm v (shift_typ newt 0))
