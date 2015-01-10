@@ -9,9 +9,10 @@ Local Open Scope nat_scope.
 
 Inductive typ := 
   | vart : nat -> typ
+(* The latter nat is the de Brujin index of the type variable. *)
   | arrow : typ -> typ -> typ
   | fall : nat -> typ -> typ.
-        (* rank-> term *)
+(* The latter nat is the kind of the type which is abstracted. *)
 
 (* The environment is a stack of values *
  * If a term has v bounded variables then they are reprensented by
@@ -52,9 +53,12 @@ Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ :=
 
 Inductive term :=
   | var : nat -> term
+(* The latter nat is the de Brujin index of the term variable. *)
   | abs : typ -> term -> term
+(* The latter typ is the type of the term which is abstracted. *)
   | app : term -> term -> term
   | dept : nat -> term -> term
+(* The latter nat is the kind of the type which is abstracted. *)
   | applt: term -> typ -> term.
 
 
