@@ -1,4 +1,4 @@
- Require Import Arith.
+Require Import Arith.
 
 Require Import Le.
 Require Import Lt.
@@ -11,45 +11,44 @@ Inductive typ :=
   | vart : nat -> typ
   | arrow : typ -> typ -> typ
   | fall : nat -> typ -> typ.
-       (* Rank -> term*)
+        (* rank-> term *)
 
-(* Idea : de Bruinj indexes to carry bounded variables
-and free variables. So we talk globally of a first freevariabe,
-a second nne and so on... *)
+(* The environment is a stack of values *
+ * If a term has v bounded variables then they are reprensented by
+ * de Brujin indexes 0..v-1. From index v and on, the de Brujin indexes
+ * represent the free variables - that must appear in the environment then -
+ * v being the top of the stack
+ *)
 
-
-
-(*The following function shift the Free variables by one*)
+(* The following function shifts the free variables by one within the type t.
+ * v is the number of bounded variables - ie number of type abstractions - in t.
+ *)
 Fixpoint tshift (t:typ) (v:nat) : typ := 
    match t with
        | vart i   =>  vart (if le_gt_dec v i then 1 + i else i  )
        | arrow t1 t2  => arrow (tshift t1 v) (tshift t2 v) 
-       | fall rank sP  => fall rank (tshift sP (v+1)) 
+       | fall rank sP  => fall rank (tshift sP (1 + v)) 
    end.
 
 (*I have to write an example about that*)
-Fixpoint tsubst (t:typ) (v:nat) (newt :typ) := 
+(* The following function substitutes the type variable number v by newt inside t.
+ * It is assumed that v is removed from the environment stack
+ * and, as always, it is assumed that v does not appear in newt.
+ *)
+Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ := 
   match t with
       | vart l => (*several cases*)
         if beq_nat v l then
           newt (*That's the variable to substitue*)
-        else vart l 
-          (*The following comments delimit a possible optimization : the compression
-of the namespace if we assume that's v is not in newt.*)
- 
-          (*if le_gt_dec l v (*That's a variable before the target variable*) 
-             then
-               vart l
-             else (*That's a free variable, but we have a hole (we removed the variable) so we
-                   need to garbage collect the name of this variable*)
-               vart (l-1)
-               *)
-               
+        else if le_gt_dec l v then (*That's a variable before the target variable*) 
+          vart l
+        else (* That's a free variable, but we have a hole (we removed the variable)
+              * so we need to garbage collect the name of this variable. *)
+          vart (l-1)               
       | arrow t1 t2 => arrow (tsubst t1 v newt) (tsubst t2 v newt)
       | fall rank sp => fall rank (tsubst sp (v+1) (tshift newt 0)) 
-                             
-   end.
- 
+  end.
+
 
 Inductive term :=
   | var : nat -> term
