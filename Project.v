@@ -52,7 +52,7 @@ Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ :=
 
 Inductive term :=
   | var : nat -> term
-  | abst : typ -> term -> term
+  | abs : typ -> term -> term
   | app : term -> term -> term
   | dept : nat -> term -> term
   | applt: term -> typ -> term.
@@ -61,7 +61,7 @@ Inductive term :=
 Fixpoint shift (t:term) (v:nat) : term :=
    match t with
        | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
-       | abst tp trm  => abst tp (shift trm (v+1)) 
+       | abs tp trm  => abs tp (shift trm (v+1)) 
        | app trm1 trm2  => app (shift trm1 v) (shift trm2 v)
        | dept i trm => dept i (shift trm v) 
        | applt trm tp =>  applt (shift trm v) tp
@@ -70,7 +70,7 @@ Fixpoint shift (t:term) (v:nat) : term :=
 Fixpoint shift_typ (t:term) (v:nat) : term :=
    match t with
        | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
-       | abst tp trm  => abst tp (shift_typ trm v) 
+       | abs tp trm  => abs tp (shift_typ trm v) 
        | app trm1 trm2  => app (shift_typ trm1 v) (shift_typ trm2 v)
        | dept i trm => dept i (shift_typ trm (v+1)) 
        | applt trm tp =>  applt (shift_typ trm v) tp
@@ -79,7 +79,7 @@ Fixpoint shift_typ (t:term) (v:nat) : term :=
 Fixpoint subst_typ (trm:term) (v:nat) (newt :typ) := 
   match trm with
       | var l => var l 
-      | abst tp trm => abst (tsubst tp v newt) (subst_typ trm v newt)
+      | abs tp trm => abs (tsubst tp v newt) (subst_typ trm v newt)
       | app trm1 trm2 => app (subst_typ trm1 v newt) (subst_typ trm2 v newt)
       | dept i trm => dept i (subst_typ trm (v+1) (tshift newt 0))
 (*We need to bound FTV correctly, so we shift each time we cross a forall*)
@@ -92,7 +92,7 @@ Fixpoint subst (trm:term) (v:nat) (newt : term) :=
   match trm with
     | var l => if beq_nat l v then newt
                  else var l
-    | abst tp trm => abst tp (subst trm (v+1) (shift newt 0))
+    | abs tp trm => abs tp (subst trm (v+1) (shift newt 0))
     | app trm1 trm2 => app (subst trm1 v newt) (subst trm2 v newt)
     | dept i trm => dept i (subst trm v (shift_typ newt 0))
     (* We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
