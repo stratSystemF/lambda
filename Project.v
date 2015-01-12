@@ -239,7 +239,7 @@ Fixpoint eq_typ t1 t2 : bool :=
 
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
-  | var x => get_typ e x
+  | var x => get_typ e x (* should also test if env if well formed *)
   | abs tp1 trm1 => match type (v tp1 e) trm1 with | None => None | Some tp2 => Some (arrow tp1 tp2) end
   | Top.app trm1 trm2 =>
       match type e trm1 with
@@ -261,4 +261,41 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
       end
   end
 .
+
+(* For the theorem to work both ways, we need an additional test that e is well formed.
+ * For now, I chose to add it in the theorem and not in the function. We´ll see if that was a good idea
+ * but probably not. 
+ *)
+Theorem completeness_of_kind :
+  forall e, wf_env e -> forall tp, (exists k, kind e tp = Some k) <-> (exists k, kinding e tp k).
+Proof.
+intros e well_formedness tp.
+split.
++ intros lhs.
+  destruct lhs as [k lhs].
+  exists k.
+  induction tp.
+  - exists k.
+    unfold kinding.
+    split.
+    * rewrite <- lhs.
+      unfold kind.
+      reflexivity.
+    * split.
+        trivial.
+        (* wf_env e required here *)
+        exact well_formedness.
+  - simpl.
+    simpl in lhs.
+    (* It is clear already that (kind e tp1) must be (Some p) *)
+    induction (kind e tp1).
+    * induction (kind e tp2).
+        (* Here we need to work on cases a <= a0 and a0 <= a *)
+        rewrite <- lhs in IHtp1.
+
+          
+
+
+Theorem soundness_of_kind :
+
 
