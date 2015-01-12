@@ -47,7 +47,7 @@ Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ :=
               * so we need to garbage collect the name of this variable. *)
           vart (l-1)               
       | arrow t1 t2 => arrow (tsubst t1 v newt) (tsubst t2 v newt)
-      | fall rank sp => fall rank (tsubst sp (v+1) (tshift newt 0)) 
+      | fall rank sp => fall rank (tsubst sp (1 + v) (tshift newt 0)) 
   end.
 
 
@@ -112,24 +112,31 @@ Fixpoint subst (trm:term) (v:nat) (newt:term) :=
         else (* That's a free variable, but we have a hole (we removed the variable)
               * so we need to garbage collect the name of this variable. *)
           var (l-1)
-    | abs tp trm => abs tp (subst trm (v+1) (shift newt 0))
+    | abs tp trm => abs tp (subst trm (1 + v) (shift newt 0))
     | app trm1 trm2 => app (subst trm1 v newt) (subst trm2 v newt)
     | dept i trm => dept i (subst trm v (shift_typ newt 0))
     (* We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
     | applt trm tp => applt (subst trm v newt) tp
   end.
 
+(* Environments *)
 Require Import List.
 Import ListNotations.
 
-
-(*We use an array indexed by de Bruinj indexes*)
+(* We use an array indexed by de Bruinj indexes - a stack -
+ * It can contain two sorts of info: the type of a term variable
+ * or the kind of a type variable
+ *)
 
 Inductive env :=
   | empty : env
   | v_typ : nat -> env -> env
+(* The latter nat is a kind. *)
   | v : typ -> env -> env.
 
+(* The following function is used to get the type of the term variable
+ * of index i in the environment e.
+ *)
 Fixpoint get_typ e (i:nat) :=
   match e with
       | empty => None
@@ -140,6 +147,9 @@ Fixpoint get_typ e (i:nat) :=
                   end
   end.
 
+(* The following function is used to get the kind of the type variable
+ * of index i in the environment e.
+ *)
 Fixpoint get_kind e (i:nat) :=
   match e with
       | empty => None
