@@ -211,5 +211,54 @@ Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
   end
 .
 
+Fixpoint kind (e : env) (tp : typ) :=
+  match tp with
+  | vart X => get_kind e X (* should also test if env if well formed *)
+  | arrow tp1 tp2 => match (kind e tp1 , kind e tp2) with
+                     | (Some p , Some q) => Some (max p q)
+                     | _ => None
+                     end
+  | fall k1 tp1 => match kind (v_typ k1 e) tp1 with
+                   | Some p => Some (1 + max p k1)
+                   | None => None
+                   end
+  end
+.
 
+(* If we decide to test for compatibility instead of equality then we must think of the right direction
+ * for this compatibility relation
+ *)
+Fixpoint eq_typ t1 t2 : bool :=
+  match (t1 , t2) with
+  | (vart x , vart y) => beq_nat x y
+  | (arrow t11 t12 , arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
+  | (fall k11 t12 , fall k22 t22) => andb (beq_nat k11 k22) (eq_typ t12 t22)
+  | _ => false
+  end
+.
+
+Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
+  match trm with
+  | var x => get_typ e x
+  | abs tp1 trm1 => match type (v tp1 e) trm1 with | None => None | Some tp2 => Some (arrow tp1 tp2) end
+  | Top.app trm1 trm2 =>
+      match type e trm1 with
+      | Some (arrow tp1 tp) => match type e trm2 with
+                               | None => None
+                               | Some tp_1 => if eq_typ tp1 tp_1 then Some tp else None
+                               end
+      | _ => None
+      end
+  | dept k1 trm1 => match type (v_typ k1 e) trm1 with | None => None | Some tp1 => Some (fall k1 tp1) end
+  | applt trm1 tp2 =>
+      match type e trm1 with
+      | Some (fall k tp1) =>
+          match kind e tp2 with
+            | Some k1 => if beq_nat k1 k then Some (tsubst tp1 0 tp2) else None
+            | _ => None
+          end
+      | _ => None
+      end
+  end
+.
 
