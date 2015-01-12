@@ -4,6 +4,7 @@ Require Import Le.
 Require Import Lt.
 Require Import Gt.
 Require Import Decidable.
+Require Import Max.
 
 Local Open Scope nat_scope.
 
@@ -262,40 +263,73 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   end
 .
 
-(* For the theorem to work both ways, we need an additional test that e is well formed.
+(* For the theorem to be true, we need an additional test that e is well formed.
  * For now, I chose to add it in the theorem and not in the function. We´ll see if that was a good idea
  * but probably not. 
  *)
-Theorem completeness_of_kind :
-  forall e, wf_env e -> forall tp, (exists k, kind e tp = Some k) <-> (exists k, kinding e tp k).
-Proof.
-intros e well_formedness tp.
-split.
-+ intros lhs.
-  destruct lhs as [k lhs].
-  exists k.
-  induction tp.
-  - exists k.
-    unfold kinding.
-    split.
-    * rewrite <- lhs.
-      unfold kind.
-      reflexivity.
-    * split.
-        trivial.
-        (* wf_env e required here *)
-        exact well_formedness.
-  - simpl.
-    simpl in lhs.
-    (* It is clear already that (kind e tp1) must be (Some p) *)
-    induction (kind e tp1).
-    * induction (kind e tp2).
-        (* Here we need to work on cases a <= a0 and a0 <= a *)
-        rewrite <- lhs in IHtp1.
-
-          
-
-
 Theorem soundness_of_kind :
+  forall e, wf_env e -> forall tp k, (kind e tp = Some k) -> (kinding e tp k).
+Proof.
+intros e well_formedness tp k lhs.
+induction tp.
++ exists k.
+  unfold kinding.
+  split.
+  - rewrite <- lhs.
+    unfold kind.
+    reflexivity.
+  - split.
+      trivial.
+      (* wf_env e required here *)
+      exact well_formedness.
++ (* We may have a problem here: the induction hypotheses are not general enough.
+   * They basically say (kind e tp = Some k) -> (kinding e tp k) but what we need
+   * rather is (kind e tp <= Some k) -> (kinding e tp k)
+   *)
+  exists k.
+  exists k.
+  simpl.
+  simpl in lhs.
+  (* It is clear already that (kind e tp1) must be (Some p) *)
+  induction (kind e tp1).
+  - induction (kind e tp2).
+    * (* Here we need to work on cases a <= a0 and a0 <= a *)
+      rewrite <- lhs in IHtp1.
+       (* Maybe we should use the lemma max_dec now *)
+       
+(* Generalize a little but does not work with the current typing definition *)
+Theorem soundness_of_kind :
+  forall e, wf_env e -> forall tp k, (exists p, kind e tp = Some p /\ p <= k) -> (kinding e tp k).
+Proof.
+intros e well_formedness tp k lhs.
+induction tp.
++ exists k.
+  unfold kinding.
+  split.
+  - destruct lhs as [p H].
+    rewrite <- lhs.
+    unfold kind.
+    reflexivity.
+  - split.
+      trivial.
+      (* wf_env e required here *)
+      exact well_formedness.
++ (* We may have a problem here: the induction hypotheses are not general enough.
+   * They basically say (kind e tp = Some k) -> (kinding e tp k) but what we need
+   * rather is (kind e tp <= Some k) -> (kinding e tp k)
+   *)
+  exists k.
+  exists k.
+  simpl.
+  simpl in lhs.
+  (* It is clear already that (kind e tp1) must be (Some p) *)
+  induction (kind e tp1).
+  - induction (kind e tp2).
+    * (* Here we need to work on cases a <= a0 and a0 <= a *)
+      rewrite <- lhs in IHtp1.
+       (* Maybe we should use the lemma max_dec now *)
+
+Theorem completeness_of_kind :
+  forall e tp, (exists k, kinding e tp k) -> (exists k, kind e tp = Some k).
 
 
