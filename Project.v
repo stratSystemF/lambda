@@ -85,12 +85,16 @@ Fixpoint shift_typ (t:term) (v:nat) : term :=
        | applt trm tp =>  applt (shift_typ trm v) tp
    end.
 
-Fixpoint subst_typ (trm:term) (v:nat) (newt :typ) := 
+(* The following function substitutes the type variable number v by newt inside t.
+ * It is assumed that v is removed from the environment stack
+ * and, as always, it is assumed that v does not appear in newt.
+ *)
+Fixpoint subst_typ (trm:term) (v:nat) (newt:typ) := 
   match trm with
       | var l => var l 
       | abs tp trm => abs (tsubst tp v newt) (subst_typ trm v newt)
       | app trm1 trm2 => app (subst_typ trm1 v newt) (subst_typ trm2 v newt)
-      | dept i trm => dept i (subst_typ trm (v+1) (tshift newt 0))
+      | dept i trm => dept i (subst_typ trm (1 + v) (tshift newt 0))
 (*We need to bound FTV correctly, so we shift each time we cross a forall*)
       | applt trm tp => applt (subst_typ trm v newt) (tsubst tp v newt)
    end.
@@ -99,7 +103,7 @@ Fixpoint subst_typ (trm:term) (v:nat) (newt :typ) :=
  * It is assumed that v is removed from the environment stack
  * and, as always, it is assumed that v does not appear in newt.
  *)
-Fixpoint subst (trm:term) (v:nat) (newt : term) :=
+Fixpoint subst (trm:term) (v:nat) (newt:term) :=
   match trm with
     | var l =>
         if beq_nat l v then newt
