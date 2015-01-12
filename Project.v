@@ -203,11 +203,13 @@ Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
       | fall k_1 tp_1 => k1 = k_1 /\ typing (v_typ k1 e) trm1 tp_1
       | _ => False
       end
-  | applt trm1 tp1 =>
-      exists (tp_1 tp_2 : typ) (trm_1 : term) (k : nat),
-        subst_typ trm_1 0 tp_2 = trm1 /\
-        tsubst tp_1 0 tp_2 = tp1 /\
-        typing e trm1 (fall k tp_1) /\
-        kinding e tp_2 k
+  | applt trm1 tp2 =>
+      exists (tp1 : typ) (k : nat),
+        tsubst tp1 0 tp2 = tp /\
+        typing e trm1 (fall k tp1) /\
+        kinding e tp2 k
   end
 .
+
+
+
