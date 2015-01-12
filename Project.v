@@ -171,10 +171,43 @@ Fixpoint wf_typ (e : env) (T : typ) {struct T} : Prop :=
 
 Fixpoint wf_env (e : env) : Prop :=
   match e with
-  |  empty      => True
-  | v T e   => wf_typ e T /\ wf_env e
+  | empty     => True
+  | v T e     => wf_typ e T /\ wf_env e
   | v_typ T e => wf_env e
   end.
 
-                                      
-                   
+(* After Figure 5: Stratified System F Kinding Rules *)
+Fixpoint kinding (e : env) (tp : typ) (k : nat) : Prop :=
+  match tp with
+  | vart X => exists p, get_kind e X = Some p /\ p <= k /\ wf_env e
+  | arrow tp1 tp2 =>
+      exists (p q : nat), kinding e tp1 p /\ kinding e tp2 q /\ k = max p q
+  | fall k1 tp1 =>
+      exists p, kinding (v_typ k1 e) tp1 p /\ k = 1 + max p k1
+  end
+.
+
+(* After Figure 6: Stratified System F Type-Checking Rules *)
+Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
+  match trm with
+  | var x => get_typ e x = Some tp /\ wf_env e
+  | abs tp1 trm1 =>
+      match tp with
+      | arrow tp_1 tp_2 => tp_1 = tp1 /\ typing (v tp1 e) trm1 tp_2
+      | _ => False
+      end
+  | Top.app trm1 trm2 =>
+      exists (tp1 : typ), typing e trm1 (arrow tp1 tp) /\ typing e trm2 tp1
+  | dept k1 trm1 =>
+      match tp with
+      | fall k_1 tp_1 => k1 = k_1 /\ typing (v_typ k1 e) trm1 tp_1
+      | _ => False
+      end
+  | applt trm1 tp1 =>
+      exists (tp_1 tp_2 : typ) (trm_1 : term) (k : nat),
+        subst_typ trm_1 0 tp_2 = trm1 /\
+        tsubst tp_1 0 tp_2 = tp1 /\
+        typing e trm1 (fall k tp_1) /\
+        kinding e tp_2 k
+  end
+.
