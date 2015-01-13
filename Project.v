@@ -318,7 +318,16 @@ induction tp.
           apply le_refl.
     * inversion H1.
   - inversion H1.
-+ 
++ destruct lhs as [p [H1 H2]].
+  simpl in H1.
+  induction (kind (v_typ n e)).
+  - inversion H1 as [h1].
+    simpl.
+    exists k.
+    split.
+    * (* Really I wonder if this is the right path.
+       * Do we still need to generalize the theorem?
+       *)
 
 
 Theorem completeness_of_kind :
