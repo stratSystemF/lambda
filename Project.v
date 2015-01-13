@@ -227,9 +227,7 @@ Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   end
 .
 
-(* If we decide to test for compatibility instead of equality then we must think of the right direction
- * for this compatibility relation
- *)
+(* Actually this function tests for compatibility instead of equality *)
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
   | (vart x , vart y) => true (* It's only structural, we don't care about kinds*) 
@@ -270,66 +268,57 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   end
 .
 
-Check le_trans.
-
- (* Generalize a little but does not work with the current typing definition *)
+(* Remark that the wf_env condition appears here and not in the definition
+ * of kind.
+ *)
 Theorem soundness_of_kind :
   forall e, wf_env e -> forall tp k, (exists p, kind e tp = Some p /\ p <= k) -> (kinding e tp k).
 Proof.
 intros e well_formedness tp k lhs.
 induction tp.
 + unfold kinding. 
-  destruct lhs as [p H].
-  destruct H.
+  destruct lhs as [p [H1 H2]].
   exists p.
   split.
-  - rewrite <- H.
+  - rewrite <- H1.
     unfold kind.
     reflexivity.
   - split.
-      trivial.
+      exact H2.
       (* wf_env e required here *)
       exact well_formedness.
-+ (* We may have a problem here: the induction hypotheses are not general enough.
-   * They basically say (kind e tp = Some k) -> (kinding e tp k) but what we need
-   * rather is (kind e tp <= Some k) -> (kinding e tp k)
-   *)
-  destruct lhs as [p H].
-  destruct H as [H1 H2].
++ destruct lhs as [p [H1 H2]].
   simpl in H1.
-  induction (kind e tp1).
-  - induction (kind e tp2).
-    * simpl. 
+  induction (kind e tp1) as [q1 | _].
+  - induction (kind e tp2) as [q2 | _].
+    * inversion H1 as [h1].
+      simpl. 
       exists k.
       exists k.
       split.
-      apply IHtp1.
-      exists a.
-      split.
-      trivial.
-      inversion H1.
-      assert (a <= max a a0).
-      apply le_max_l.
-      rewrite H0 in H.
-      assert(a<=p -> p<=k -> a<=k).
-      apply le_trans.
-      apply H3.
-      apply H.
-      apply H2.
-      split.
-      apply IHtp2.
-      exists a0.
-      split.
-      reflexivity.
-      inversion H1.
-      assert (a0<= max a a0).
-      apply le_max_r.
-      rewrite H0 in H.
-      assert(a0<=p -> p<= k -> a0<=k).
-      apply le_trans.
-      apply H3.
-      assumption.
-      assumption.
+        apply IHtp1.
+        exists q1.
+        split.
+          reflexivity.
+          rewrite <- h1 in H2.
+          apply le_trans with (m := max q1 q2).
+          apply le_max_l.
+          exact H2.
+        split.
+          apply IHtp2.
+          exists q2.
+          split.
+            reflexivity.
+            rewrite <- h1 in H2.
+            apply le_trans with (m := max q1 q2).
+            apply le_max_r.
+            exact H2.
+          symmetry.
+          apply max_l.
+          apply le_refl.
+    * inversion H1.
+  - inversion H1.
++ 
 
 
 Theorem completeness_of_kind :
