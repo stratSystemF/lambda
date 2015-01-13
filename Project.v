@@ -5,7 +5,7 @@ Require Import Lt.
 Require Import Gt.
 Require Import Decidable.
 Require Import Max.
-
+Require Import Omega.
 Local Open Scope nat_scope.
 
 Inductive typ := 
@@ -212,7 +212,8 @@ Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
   end
 .
 
-Fixpoint kind (e : env) (tp : typ) :=
+(*This function computes the minimal kind for a type term*)
+Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
   | vart X => get_kind e X (* should also test if env if well formed *)
   | arrow tp1 tp2 => match (kind e tp1 , kind e tp2) with
@@ -231,7 +232,7 @@ Fixpoint kind (e : env) (tp : typ) :=
  *)
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
-  | (vart x , vart y) => beq_nat x y
+  | (vart x , vart y) => true (* It's only structural, we don't care about kinds*) 
   | (arrow t11 t12 , arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
   | (fall k11 t12 , fall k22 t22) => andb (beq_nat k11 k22) (eq_typ t12 t22)
   | _ => false
@@ -241,7 +242,10 @@ Fixpoint eq_typ t1 t2 : bool :=
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
   | var x => get_typ e x (* should also test if env if well formed *)
-  | abs tp1 trm1 => match type (v tp1 e) trm1 with | None => None | Some tp2 => Some (arrow tp1 tp2) end
+  | abs tp1 trm1 => match type (v tp1 e) trm1 with 
+                      | None => None 
+                      | Some tp2 => Some (arrow tp1 tp2)
+                    end
   | Top.app trm1 trm2 =>
       match type e trm1 with
       | Some (arrow tp1 tp) => match type e trm2 with
@@ -250,7 +254,10 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
                                end
       | _ => None
       end
-  | dept k1 trm1 => match type (v_typ k1 e) trm1 with | None => None | Some tp1 => Some (fall k1 tp1) end
+  | dept k1 trm1 => match type (v_typ k1 e) trm1 with 
+                      | None => None 
+                      | Some tp1 => Some (fall k1 tp1) 
+                    end
   | applt trm1 tp2 =>
       match type e trm1 with
       | Some (fall k tp1) =>
@@ -263,51 +270,20 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   end
 .
 
-(* For the theorem to be true, we need an additional test that e is well formed.
- * For now, I chose to add it in the theorem and not in the function. We´ll see if that was a good idea
- * but probably not. 
- *)
-Theorem soundness_of_kind :
-  forall e, wf_env e -> forall tp k, (kind e tp = Some k) -> (kinding e tp k).
-Proof.
-intros e well_formedness tp k lhs.
-induction tp.
-+ exists k.
-  unfold kinding.
-  split.
-  - rewrite <- lhs.
-    unfold kind.
-    reflexivity.
-  - split.
-      trivial.
-      (* wf_env e required here *)
-      exact well_formedness.
-+ (* We may have a problem here: the induction hypotheses are not general enough.
-   * They basically say (kind e tp = Some k) -> (kinding e tp k) but what we need
-   * rather is (kind e tp <= Some k) -> (kinding e tp k)
-   *)
-  exists k.
-  exists k.
-  simpl.
-  simpl in lhs.
-  (* It is clear already that (kind e tp1) must be (Some p) *)
-  induction (kind e tp1).
-  - induction (kind e tp2).
-    * (* Here we need to work on cases a <= a0 and a0 <= a *)
-      rewrite <- lhs in IHtp1.
-       (* Maybe we should use the lemma max_dec now *)
-       
-(* Generalize a little but does not work with the current typing definition *)
+Check le_trans.
+
+ (* Generalize a little but does not work with the current typing definition *)
 Theorem soundness_of_kind :
   forall e, wf_env e -> forall tp k, (exists p, kind e tp = Some p /\ p <= k) -> (kinding e tp k).
 Proof.
 intros e well_formedness tp k lhs.
 induction tp.
-+ exists k.
-  unfold kinding.
++ unfold kinding. 
+  destruct lhs as [p H].
+  destruct H.
+  exists p.
   split.
-  - destruct lhs as [p H].
-    rewrite <- lhs.
+  - rewrite <- H.
     unfold kind.
     reflexivity.
   - split.
@@ -318,16 +294,43 @@ induction tp.
    * They basically say (kind e tp = Some k) -> (kinding e tp k) but what we need
    * rather is (kind e tp <= Some k) -> (kinding e tp k)
    *)
-  exists k.
-  exists k.
-  simpl.
-  simpl in lhs.
-  (* It is clear already that (kind e tp1) must be (Some p) *)
+  destruct lhs as [p H].
+  destruct H as [H1 H2].
+  simpl in H1.
   induction (kind e tp1).
   - induction (kind e tp2).
-    * (* Here we need to work on cases a <= a0 and a0 <= a *)
-      rewrite <- lhs in IHtp1.
-       (* Maybe we should use the lemma max_dec now *)
+    * simpl. 
+      exists k.
+      exists k.
+      split.
+      apply IHtp1.
+      exists a.
+      split.
+      trivial.
+      inversion H1.
+      assert (a <= max a a0).
+      apply le_max_l.
+      rewrite H0 in H.
+      assert(a<=p -> p<=k -> a<=k).
+      apply le_trans.
+      apply H3.
+      apply H.
+      apply H2.
+      split.
+      apply IHtp2.
+      exists a0.
+      split.
+      reflexivity.
+      inversion H1.
+      assert (a0<= max a a0).
+      apply le_max_r.
+      rewrite H0 in H.
+      assert(a0<=p -> p<= k -> a0<=k).
+      apply le_trans.
+      apply H3.
+      assumption.
+      assumption.
+
 
 Theorem completeness_of_kind :
   forall e tp, (exists k, kinding e tp k) -> (exists k, kind e tp = Some k).
