@@ -352,6 +352,6 @@ induction tp.
 Qed.
 
 Theorem completeness_of_kind :
-  forall e tp, (exists k, kinding e tp k) -> (exists k, kind e tp = Some k).
+ forall e tp k, (kinding e tp k) -> (forall p, p < k -> kinding e tp p -> False) -> (kind e tp = Some k).
 
 
