@@ -188,9 +188,6 @@ Fixpoint kinding (e : env) (tp : typ) (k : nat) : Prop :=
   end
 .
 
-Lemma weakening : forall e tp r s, kinding e tp r -> r <= s -> kinding e tp s.
-Admitted.
-
 (* After Figure 6: Stratified System F Type-Checking Rules *)
 Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
   match trm with
@@ -275,65 +272,50 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
  * of kind.
  *)
 Theorem soundness_of_kind :
-  forall tp e k, (wf_env e /\ exists p, kind e tp = Some p /\ p <= k) -> (kinding e tp k).
+  forall tp e k, (wf_env e /\ kind e tp = Some k) -> (kinding e tp k).
 Proof.
 induction tp.
 + intros e k lhs.
-  destruct lhs as [well_formedness [p [H1 H2]]].
+  destruct lhs as [well_formedness H].
   unfold kinding.
-  exists p.
+  exists k.
   split.
-  - rewrite <- H1.
+  - rewrite <- H.
     unfold kind.
     reflexivity.
   - split.
-      exact H2.
+      reflexivity.
       exact well_formedness.
 + intros e k lhs.
-  destruct lhs as [well_formedness [p [H1 H2]]].
-  simpl in H1.
-  specialize IHtp1 with (e := e) (k := k).
-  specialize IHtp2 with (e := e) (k := k).
+  destruct lhs as [well_formedness H].
+  simpl in H.
+  specialize IHtp1 with (e := e).
+  specialize IHtp2 with (e := e).
   induction (kind e tp1) as [q1 | _].
   - induction (kind e tp2) as [q2 | _].
-    * inversion H1 as [h1].
+    * inversion H as [h].
       simpl. 
-      exists k.
-      exists k.
+      exists q1.
+      exists q2.
       split.
         apply IHtp1.
         split.
           exact well_formedness.
-          exists q1.
-          split.
-            reflexivity.
-            rewrite <- h1 in H2.
-            apply le_trans with (m := max q1 q2).
-            apply le_max_l.
-            exact H2.
+          reflexivity.
         split.
           apply IHtp2.
           split.
             exact well_formedness.
-            exists q2.
             split.
               reflexivity.
-              rewrite <- h1 in H2.
-              apply le_trans with (m := max q1 q2).
-              apply le_max_r.
-              exact H2.
-          symmetry.
-          apply max_l.
-          apply le_refl.
     * discriminate.
   - discriminate.
 + intros e k lhs.
-  destruct lhs as [well_formedness [l [H1 H2]]].
-  simpl in H1.
+  destruct lhs as [well_formedness H].
+  simpl in H.
   specialize IHtp with (e := (v_typ n e)).
   induction (kind (v_typ n e)) as [p | _].
-  - inversion H1 as [h1].
-    apply weakening with (r := l).
+  - inversion H as [h].
     simpl.
     exists p.
     split.
@@ -341,17 +323,17 @@ induction tp.
       split.
         simpl.
         exact well_formedness.
-        exists p.
-        split.
-          reflexivity.
-          apply le_refl.
-    * rewrite h1. 
-      reflexivity.
-    * exact H2.
+        reflexivity.
+    * reflexivity.
   - discriminate.
 Qed.
 
 Theorem completeness_of_kind :
  forall e tp k, (kinding e tp k) -> (forall p, p < k -> kinding e tp p -> False) -> (kind e tp = Some k).
+Admitted.
 
+(* No need for now *)
+
+Lemma weakening : forall e tp r s, kinding e tp r -> r <= s -> kinding e tp s.
+Admitted.
 
