@@ -332,7 +332,127 @@ Theorem completeness_of_kind :
  forall e tp k, (kinding e tp k) -> (forall p, p < k -> kinding e tp p -> False) -> (kind e tp = Some k).
 Admitted.
 
-(* No need for now *)
+Require Import GenericMinMax.
+
+Check max_lub.
+Lemma wk e tp k : (exists n,kinding (v_typ n e) tp k) -> kinding e tp k.
+Proof.
+admit.
+Qed.
+
+Theorem cness_of_kind :
+  forall e tp k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
+Proof.
+induction tp.
+- intro k.
+  intro kding.
+  unfold kinding in kding.
+  destruct kding.
+  exists x.
+  split.
+  destruct H.
+  destruct H0.
+  apply H0.
+  destruct H.
+  rewrite <- H.
+  simpl.
+  reflexivity.
+- intro k.
+  intro kding.
+  destruct kding.
+  destruct H.
+  destruct H as [k1 [k2 eq]].
+  specialize IHtp1 with (k:=x).
+  specialize IHtp2 with (k:=x0).
+  assert (exists p:nat, p<= x /\ kind e tp1 = Some p).
+  apply IHtp1.
+  apply k1.
+  assert (exists p:nat, p<= x0 /\ kind e tp2 = Some p).
+  apply IHtp2.
+  apply k2.
+  destruct H.
+  destruct H0.
+  exists (max x1 x2).
+  split.
+  destruct H as [iequal1 k'1].
+  destruct H0 as [iequal2 k'2].
+  apply max_lub.
+  transitivity x.
+  apply iequal1.
+  rewrite eq.
+  apply le_max_l.
+  transitivity x0.
+  apply iequal2.
+  rewrite eq.
+  apply le_max_r.
+  simpl.
+  destruct H.
+  destruct H0.
+  rewrite H1.
+  rewrite H2.
+  reflexivity.
+-
+(*
+ intro k.
+  intro kding.
+  simpl.
+  destruct kding as [x [kd eq]].
+  specialize IHtp with (k:= x).
+  assert(exists p: nat, p<=x /\ kind e tp = Some p).
+  apply IHtp.
+  apply wk.
+  exists n.
+  apply kd.
+  destruct H.
+  destruct H.
+  exists x0.
+  split.
+  transitivity x.
+  assumption.
+  transitivity (max x n).
+  apply le_max_l.
+  rewrite eq.
+  auto.
+
+
+  exists k.
+  split.
+  trivial.
+  
+.
+  transitivity (max x n).
+  apply le_max_l.
+  auto.
+  simpl.
+
+
+  rewrite eq.  
+
+  induction tp.
+  * simpl. 
+    destruct kd.
+    
+  unfold kinding in kd.
+  exists k.
+  split.
+  reflexivity.
+  simpl.    
+  specialize IHtp1 with (k:=x).
+  specialize IHtp2 with (k:=x0).
+
+  destruct H2.
+  destruct H3.
+  destruct H2.
+  destruct H3.
+  rewrite H4.
+  rewrite H5.
+inversion H3.
+  
+*)
+
+
+
+.(* No nd for now *)
 
 Lemma weakening : forall e tp r s, kinding e tp r -> r <= s -> kinding e tp s.
 Admitted.
