@@ -341,10 +341,11 @@ admit.
 Qed.
 
 Theorem cness_of_kind :
-  forall e tp k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
+  forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
 Proof.
 induction tp.
-- intro k.
+- intro e.
+  intro k.
   intro kding.
   unfold kinding in kding.
   destruct kding.
@@ -357,7 +358,8 @@ induction tp.
   rewrite <- H.
   simpl.
   reflexivity.
-- intro k.
+- intro e.
+  intro k.
   intro kding.
   destruct kding.
   destruct H.
@@ -391,68 +393,41 @@ induction tp.
   rewrite H1.
   rewrite H2.
   reflexivity.
--
-(*
- intro k.
+- intros e.
+  intro k.
   intro kding.
-  simpl.
-  destruct kding as [x [kd eq]].
+  
+  specialize IHtp with (e:=v_typ n e).  
+  destruct kding.
+  destruct H.
   specialize IHtp with (k:= x).
-  assert(exists p: nat, p<=x /\ kind e tp = Some p).
-  apply IHtp.
-  apply wk.
-  exists n.
-  apply kd.
-  destruct H.
-  destruct H.
-  exists x0.
+  destruct (IHtp H).
+  exists (1 + max x0 n).
   split.
+  simpl.
+  transitivity (S(max x n)).
+  SearchAbout (S _ <= S _ ).
+  apply le_n_S.
+  destruct H1.
+  apply max_lub.
   transitivity x.
-  assumption.
-  transitivity (max x n).
+  apply H1.
   apply le_max_l.
-  rewrite eq.
-  auto.
-
-
-  exists k.
-  split.
-  trivial.
-  
-.
-  transitivity (max x n).
-  apply le_max_l.
+  apply le_max_r.
+  rewrite H0.
+  simpl.
   auto.
   simpl.
-
-
-  rewrite eq.  
-
-  induction tp.
-  * simpl. 
-    destruct kd.
-    
-  unfold kinding in kd.
-  exists k.
-  split.
+  destruct H1.
+  destruct (kind (v_typ n e) tp).
+  inversion H2.
+  rewrite <- H4.
   reflexivity.
-  simpl.    
-  specialize IHtp1 with (k:=x).
-  specialize IHtp2 with (k:=x0).
-
-  destruct H2.
-  destruct H3.
-  destruct H2.
-  destruct H3.
-  rewrite H4.
-  rewrite H5.
-inversion H3.
-  
-*)
+  discriminate.
+Qed.
 
 
 
-.(* No nd for now *)
 
 Lemma weakening : forall e tp r s, kinding e tp r -> r <= s -> kinding e tp s.
 Admitted.
