@@ -212,6 +212,14 @@ Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
   end
 .
 
+Inductive typing : env -> term -> typ ->  Prop :=
+  | typed_var : forall (e:env) (trm:term) (tp:typ), exists (x : nat), trm = var x -> get_typ e n = Some tp -> wf_env e -> typing e (var x) tp 
+  | abs : forall (e:env) (trm:term) (tp:typ), 
+          exists (tp1:typ) (trm1:term) (tp_1: typ) (tp_2:typ),
+            trm = abs tp1 trm1 ->  tp = arrow tp_1 tp_2 -> tp_1 = tp1  -> typing (v tp1 e) trm1 tp_2 
+  | Top.app : forall (e:env) (trm:term) (tp:typ),
+  | dept :
+  | applt :
 (*This function computes the minimal kind for a type term*)
 Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
@@ -328,26 +336,16 @@ induction tp.
   - discriminate.
 Qed.
 
-Theorem completeness_of_kind :
- forall e tp k, (kinding e tp k) -> (forall p, p < k -> kinding e tp p -> False) -> (kind e tp = Some k).
-Admitted.
 
 Require Import GenericMinMax.
 
-Check max_lub.
-Lemma wk e tp k : (exists n,kinding (v_typ n e) tp k) -> kinding e tp k.
-Proof.
-admit.
-Qed.
 
 Theorem cness_of_kind :
   forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
 Proof.
 induction tp.
 - intro e.
-  intro k.
-  intro kding.
-  unfold kinding in kding.
+  intros k,kding.
   destruct kding.
   exists x.
   split.
@@ -427,8 +425,7 @@ induction tp.
 Qed.
 
 
-
-
-Lemma weakening : forall e tp r s, kinding e tp r -> r <= s -> kinding e tp s.
-Admitted.
-
+Theorem soundness_of_typ :
+  forall tp e k, (wf_env e /\ type e tp = Some k) -> (typing e tp k).
+Proof.
+induction tp.
