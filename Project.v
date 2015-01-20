@@ -215,24 +215,23 @@ Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
 
 
 Inductive typing : env -> term -> typ ->  Prop :=
-  | typed_var : forall (e:env) (trm:term) (tp:typ) (x:nat),
-                   ( trm = var x :> term ) ->
+  | typed_var : forall (e:env) (tp:typ) (x:nat),
                    (get_typ e x = Some tp :> option typ) ->
                    wf_env e ->
-                   typing e trm tp
-  | typed_abs : forall (e:env) (trm:term) (tp:typ), 
-                forall (tp1:typ) (trm1:term) (tp_1: typ) (tp_2:typ),
-            trm = abs tp1 trm1 ->  tp = arrow tp_1 tp_2 -> tp_1 = tp1  -> typing (v tp1 e) trm1 tp_2 
-             -> typing e trm tp
-  | typed_app : forall (e:env) (trm:term) (tp:typ),
+                   typing e (var x) tp
+  | typed_abs : forall (e:env),
+                forall (tp1:typ) (trm1:term) (tp_2:typ),
+                typing (v tp1 e) trm1 tp_2 
+             -> typing e (abs tp1 trm1) (arrow tp1 tp_2)
+  | typed_app : forall (e:env)  (tp:typ),
               forall (trm1 trm2:term) (tp1:typ),
-                trm = Top.app trm1 trm2  ->  typing e trm1 (arrow tp1 tp) -> typing e trm2 tp1 -> typing e trm tp 
-  | typed_dept : forall (e:env) (trm:term) (tp:typ),
-                  forall (kl k_l:nat) (trm1: term) (tp_1:typ),
-                     trm = dept kl trm1 -> tp = fall k_l tp_1 -> kl=k_l -> typing (v_typ kl e) trm1 tp_1 -> typing e trm tp
+              typing e trm1 (arrow tp1 tp) -> typing e trm2 tp1 -> typing e (Top.app trm1 trm2) tp 
+  | typed_dept : forall (e:env),
+                  forall (kl :nat) (trm1: term) (tp_1:typ),
+                  typing (v_typ kl e) trm1 tp_1 -> typing e (dept kl trm1) (fall kl tp_1)
   | typed_applt : forall (e:env) (trm:term) (tp:typ),
-                    forall (trm1:term) (tp2 tp1:typ) (k:nat),
-                      tsubst tp1 0 tp2 = tp -> typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm tp.
+                  forall (trm1:term) (tp2 tp1:typ) (k:nat),
+                  typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm (tsubst tp1 0 tp2).
 
 (*This function computes the minimal kind for a type term*)
 Fixpoint kind (e : env) (tp : typ) : (option nat) :=
@@ -417,50 +416,157 @@ Qed.
 
 Print typing_ind.
 
+
+Lemma weakget: forall e n t, get_kind e n <> None -> get_kind (v t e) n <> None.
+Proof.
+induction e.
+intros n t.
+intro. simpl.
+simpl in H.
+apply H.
+intros n0 t.
+intro.
+simpl in H.
+simpl.
+apply H.
+intros n t0.
+intro.
+simpl in H.
+simpl.
+apply H.
+Qed.
+
+Lemma weak2 : forall n e t t0, get_kind (v_typ t e) n  <> None -> get_kind (v_typ t (v t0 e)) n <> None.
+Proof.
+induction n.
+intros e t t0.
+intro.
+simpl in H.
+simpl.
+apply H.
+intros e t t0.
+intros.
+simpl in H.
+simpl.
+apply H.
+Qed.
+
+(* Lemma weakPermut : forall tp e n t , wf_typ (v_typ n (v t e)) tp -> wf_typ (v t (v_typ n e)) tp.  *)
+(* Proof. *)
+(* induction tp. *)
+(* + intros e n0 t. *)
+(*   intro Hwf. *)
+(*   simpl. *)
+(*   simpl in Hwf. *)
+(*   apply Hwf. *)
+(* + intros e n t. *)
+(*   intro Hwf. *)
+(*   simpl. *)
+(*   simpl in Hwf. *)
+(*   destruct Hwf as [Hwf1 Hwf2]. *)
+(*   split. *)
+(*   apply IHtp1. *)
+(*   apply Hwf1. *)
+(*   apply IHtp2. *)
+(*   apply Hwf2. *)
+(* + intros e n0 t. *)
+(*   intro Hwf. *)
+(*   simpl. *)
+(*   simpl in Hwf. *)
+
+
+
+(* Lemma weakwftyp : forall tp e t, wf_typ e tp -> wf_typ (v t e) tp. *)
+(* Proof. *)
+(* induction tp. *)
+(* + intros e t. *)
+(*   intro. *)
+(*   simpl. *)
+(*   simpl in H. *)
+(*   apply H. *)
+(* + intros e t. *)
+(*   intro. *)
+(*   simpl in H. *)
+(*   simpl. *)
+(*   split. *)
+(*   apply IHtp1. *)
+(*   apply H. *)
+(*   apply IHtp2. *)
+(*   apply H. *)
+(* + intros e t. *)
+(*   intro. *)
+(*   simpl. *)
+(*   simpl in H. *)
+(* unfold wf_typ. *)
+
 Theorem soundness_of_typ :
-  forall trm tp e, (wf_env e /\ wf_typ e tp /\ type e trm = Some tp) -> (typing e trm tp).
+  forall trm tp e, (wf_env e /\ wf_typ e tp /\  type e trm = Some tp) -> (typing e trm tp).
 Proof.
 induction trm.
 +intros tp e and.
  destruct and as [wfness [wftyp typ]].
  simpl in typ.
- apply (typed_var e (var n) tp n). 
- reflexivity.
+ apply (typed_var). 
+ apply typ.
+ apply wfness.
++intros tp e and.
+ destruct and as [wfness [wftyp typ]].
+ simpl in typ.
+ destruct (type (v t e) trm) eqn:eq.
+ inversion typ.
+ apply typed_abs.
+ apply IHtrm.
+ split.
+ simpl.
+ split.
+ rewrite <- H0 in wftyp.
+ simpl in wftyp.
+ destruct wftyp as [wf1 wf2].
+ apply wf1.
+ apply wfness.
+ split.
+ rewrite <- H0 in wftyp.
+ simpl in wftyp.
+ destruct wftyp as [wf1 wf2]. 
+reflexivity.
  apply typ.
  apply wfness.
 + intros tp e and.
  destruct and as [wfness [wftyp typ]].
  (*It doesn't work, I would like to do an inversion here, on typ*)
  (*destruct (type (v t e) (trm)).*)
- induction (type e (abs t trm)).
  
- apply (typed_abs e (abs t trm) tp t trm t tp ).
+ 
 
- reflexivity.
  inversion typ.
+ destruct (type (v t e) trm) eqn:eq.
+ apply (typed_abs e (abs t trm) tp t trm t t0).  
+ 
+ reflexivity.
+ inversion H0.
  reflexivity.
  reflexivity.
- apply (IHtrm (v t e) t0).
+ apply (IHtrm t0 (v t e)).
  split.
-  * simpl.
-    split.
-    inversion typ.
-    rewrite <- H0 in wftyp.
-    simpl in wftyp.
-    destruct wftyp.
-    apply H. 
-    apply wfness.
-  * split.    
-    inversion typ.
-    rewrite <- H0 in wftyp.
-    simpl in wftyp.    
-    destruct wftyp.
-    admit.    
+ simpl.
+ split.
+ inversion H0.
+ rewrite <- H1 in wftyp.
+ simpl in wftyp.
+ destruct wftyp.
+ apply H.
+ apply wfness.
+ split.
+ inversion H0.
+ rewrite <- H1 in wftyp.
+ simpl in wftyp.
+ destruct wftyp.
+(*Lemme stupide*)
+ admit.
+ apply eq.
+ discriminate.
++
     
-
-
-   (*Could be useful as a lemma*)
-     admit.
      
 (*Inductive typing : env -> term -> typ ->  Prop :=
   | typed_var : forall (e:env) (trm:term) (tp:typ),
