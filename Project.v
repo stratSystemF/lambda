@@ -222,7 +222,8 @@ Inductive typing : env -> term -> typ ->  Prop :=
   | typed_abs : forall (e:env),
                 forall (tp1:typ) (trm1:term) (tp_2:typ),
                 typing (v tp1 e) trm1 tp_2 
-             -> typing e (abs tp1 trm1) (arrow tp1 tp_2)
+                
+                -> typing e (abs tp1 trm1) (arrow tp1 tp_2)
   | typed_app : forall (e:env)  (tp:typ),
               forall (trm1 trm2:term) (tp1:typ),
               typing e trm1 (arrow tp1 tp) -> typing e trm2 tp1 -> typing e (Top.app trm1 trm2) tp 
@@ -234,53 +235,58 @@ Inductive typing : env -> term -> typ ->  Prop :=
                   typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm (tsubst tp1 0 tp2).
 
 (*This function computes the minimal kind for a type term*)
-Fixpoint kind (e : env) (tp : typ) : (option nat) :=
+Require Import Program.
+Program Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
   | vart X => get_kind e X (* should also test if env if well formed *)
-  | arrow tp1 tp2 => match (kind e tp1 , kind e tp2) with
+  | Top.arrow tp1 tp2 => match (kind e tp1, kind e tp2 ) with
                      | (Some p , Some q) => Some (max p q)
                      | _ => None
                      end
-  | fall k1 tp1 => match kind (v_typ k1 e) tp1 with
+  | fall k1 tp1 => match kind (v_typ k1 e) tp1  with
                    | Some p => Some (1 + max p k1)
                    | None => None
                    end
-  end
-.
+  end.
 
 (* Actually this function tests for compatibility instead of equality *)
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
   | (vart x , vart y) => true (* It's only structural, we don't care about kinds*) 
-  | (arrow t11 t12 , arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
+  | (Top.arrow t11 t12 , Top.arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
   | (fall k11 t12 , fall k22 t22) => andb (beq_nat k11 k22) (eq_typ t12 t22)
   | _ => false
-  end
-.
+  end.
 
+Require Import Program.
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
-  | var x => get_typ e x (* should also test if env if well formed *)
-  | abs tp1 trm1 => match type (v tp1 e) trm1 with 
-                      | None => None 
-                      | Some tp2 => Some (arrow tp1 tp2)
-                    end
+  | var x => get_typ e x
+  | abs tp1 trm1 => 
+    match kind e tp1 with
+        | Some a =>
+          match type (v tp1 e) trm1  with 
+                         | None => None 
+                         | Some tp2 => Some (Top.arrow tp1 tp2)
+          end
+        | None => None
+    end
   | Top.app trm1 trm2 =>
-      match type e trm1 with
-      | Some (arrow tp1 tp) => match type e trm2 with
+      match type e trm1  with
+      | Some (Top.arrow tp1 tp) => match type e trm2 with
                                | None => None
                                | Some tp_1 => if eq_typ tp1 tp_1 then Some tp else None
                                end
       | _ => None
       end
-  | dept k1 trm1 => match type (v_typ k1 e) trm1 with 
+  | dept k1 trm1 => match type (v_typ k1 e) trm1  with 
                       | None => None 
                       | Some tp1 => Some (fall k1 tp1) 
                     end
   | applt trm1 tp2 =>
-      match type e trm1 with
+      match type e trm1  with
       | Some (fall k tp1) =>
-          match kind e tp2 with
+          match kind e tp2  with
             | Some k1 => if beq_nat k1 k then Some (tsubst tp1 0 tp2) else None
             | _ => None
           end
@@ -288,6 +294,7 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
       end
   end
 .
+
 
 (* Remark that the wf_env condition appears here and not in the definition
  * of kind.
@@ -499,26 +506,55 @@ Qed.
 (*   simpl in H. *)
 (* unfold wf_typ. *)
 
+Lemma wfOfType : forall tp e trm, wf_env e -> type e trm = Some tp -> wf_typ e tp.
+Proof.
+induction tp.
++ intros e trm.
+  intros wf eq.
+  simpl.
+  simpl in eq.
+  induction e.
+  simpl in eq.
+  destruct trm.
+  simpl in eq.
+  discriminate eq.
+  destruct (type empty (abs t trm)
+  
+  simpl in eq.
+  
+
+
+  apply IHtrm.
+  simpl in eq.
+  induction n0.
+  simpl in eq.
+  simpl wf.
+  simpl in eq.
+  simpl.
+  induction n0.
+  apply eq.
+
+
 Theorem soundness_of_typ :
-  forall trm tp e, (wf_env e /\ wf_typ e tp /\  type e trm = Some tp) -> (typing e trm tp).
+  forall trm tp e, (wf_env e /\ type e trm = Some tp) -> (typing e trm tp).
 Proof.
 induction trm.
 +intros tp e and.
- destruct and as [wfness [wftyp typ]].
+ destruct and as [wfness typ].
  simpl in typ.
  apply (typed_var). 
  apply typ.
  apply wfness.
 +intros tp e and.
- destruct and as [wfness [wftyp typ]].
- simpl in typ.
- destruct (type (v t e) trm) eqn:eq.
+ destruct and as [wfness typ].
+ 
+ destruct (type e (abs t trm)) eqn:eq.
  inversion typ.
  apply typed_abs.
  apply IHtrm.
  split.
  simpl.
- split.
+split.
  rewrite <- H0 in wftyp.
  simpl in wftyp.
  destruct wftyp as [wf1 wf2].
