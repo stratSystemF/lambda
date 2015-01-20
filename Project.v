@@ -506,34 +506,79 @@ Qed.
 (*   simpl in H. *)
 (* unfold wf_typ. *)
 
-Lemma wfOfType : forall tp e trm, wf_env e -> type e trm = Some tp -> wf_typ e tp.
+(* Lemma wfOfType : forall tp e trm, wf_env e -> type e trm = Some tp -> wf_typ e tp. *)
+(* Proof. *)
+(* induction tp. *)
+(* + intros e trm. *)
+(*   intros wf eq. *)
+(*   simpl. *)
+(*   simpl in eq. *)
+(*   induction e. *)
+(*   simpl in eq. *)
+(*   destruct trm. *)
+(*   simpl in eq. *)
+(*   discriminate eq. *)
+(*   destruct (type empty (abs t trm) *)
+  
+(*   simpl in eq. *)
+  
+
+
+(*   apply IHtrm. *)
+(*   simpl in eq. *)
+(*   induction n0. *)
+(*   simpl in eq. *)
+(*   simpl wf. *)
+(*   simpl in eq. *)
+(*   simpl. *)
+(*   induction n0. *)
+(*   apply eq. *)
+Lemma kind2wf : forall tp e, wf_env e -> (exists n, kind e tp = Some n) -> wf_typ e tp. 
 Proof.
 induction tp.
-+ intros e trm.
-  intros wf eq.
-  simpl.
-  simpl in eq.
-  induction e.
-  simpl in eq.
-  destruct trm.
-  simpl in eq.
-  discriminate eq.
-  destruct (type empty (abs t trm)
-  
-  simpl in eq.
-  
-
-
-  apply IHtrm.
-  simpl in eq.
-  induction n0.
-  simpl in eq.
-  simpl wf.
-  simpl in eq.
-  simpl.
-  induction n0.
-  apply eq.
-
++intros e nO wf kd.
+ simpl in kd.
+ simpl.
+ destruct wf.
+ simpl in H.
+ rewrite H in kd.
+ discriminate.
++intros e wf ex.
+ destruct ex.
+ simpl.
+ split.
+ apply (IHtp1 e).
+ apply wf.
+ simpl in H.
+ destruct (kind e tp1) eqn: eq.
+ destruct (kind e tp2) eqn : eq2.
+ exists n.
+ reflexivity.
+ exists n.
+ reflexivity.
+ discriminate.
+ apply (IHtp2 e).
+ apply wf.
+ simpl in H.
+ destruct (kind e tp1) eqn: eq.
+ destruct (kind e tp2) eqn : eq2.
+ exists n0.
+ reflexivity.
+ discriminate.
+ discriminate.
++intros e wf ex.
+ destruct ex.
+ simpl.
+ apply IHtp.
+ simpl.
+ apply wf.
+ simpl in H.
+ destruct (kind (v_typ n e) tp) eqn:eq.
+ exists n0.
+ reflexivity.
+ discriminate.
+Qed.
+ 
 
 Theorem soundness_of_typ :
   forall trm tp e, (wf_env e /\ type e trm = Some tp) -> (typing e trm tp).
@@ -546,15 +591,18 @@ induction trm.
  apply typ.
  apply wfness.
 +intros tp e and.
- destruct and as [wfness typ].
- 
- destruct (type e (abs t trm)) eqn:eq.
+ destruct and as [wfness typ]. 
+ simpl in typ.
+ destruct (type (v t e) trm) eqn:eq.
+ destruct (kind e t) eqn:eq1.
  inversion typ.
- apply typed_abs.
+
+ apply (typed_abs) .
  apply IHtrm.
  split.
  simpl.
-split.
+ split.
+ simpl.
  rewrite <- H0 in wftyp.
  simpl in wftyp.
  destruct wftyp as [wf1 wf2].
