@@ -603,53 +603,42 @@ induction trm.
  simpl.
  split.
  simpl.
- rewrite <- H0 in wftyp.
- simpl in wftyp.
- destruct wftyp as [wf1 wf2].
- apply wf1.
+ apply (kind2wf).
  apply wfness.
- split.
- rewrite <- H0 in wftyp.
- simpl in wftyp.
- destruct wftyp as [wf1 wf2]. 
-reflexivity.
- apply typ.
+ exists n.
+ apply eq1.
  apply wfness.
-+ intros tp e and.
- destruct and as [wfness [wftyp typ]].
- (*It doesn't work, I would like to do an inversion here, on typ*)
- (*destruct (type (v t e) (trm)).*)
- 
- 
-
- inversion typ.
- destruct (type (v t e) trm) eqn:eq.
- apply (typed_abs e (abs t trm) tp t trm t t0).  
- 
- reflexivity.
- inversion H0.
- reflexivity.
- reflexivity.
- apply (IHtrm t0 (v t e)).
- split.
- simpl.
- split.
- inversion H0.
- rewrite <- H1 in wftyp.
- simpl in wftyp.
- destruct wftyp.
- apply H.
- apply wfness.
- split.
- inversion H0.
- rewrite <- H1 in wftyp.
- simpl in wftyp.
- destruct wftyp.
-(*Lemme stupide*)
- admit.
  apply eq.
  discriminate.
-+
+ destruct (kind e t).
+ discriminate.
+ discriminate.
++ intros tp e and.
+  destruct and as [wfness typ].
+  simpl in typ.
+  destruct (type e trm1) eqn:eq.
+  destruct (type e trm2) eqn:eq1.
+  destruct (t) eqn:eq2.
+  discriminate.
+  apply (typed_app e tp trm1 trm2 t1_1 ).
+  apply (IHtrm1).
+  split.
+  apply wfness.
+  rewrite eq.
+  destruct (eq_typ t1_1 t0) eqn:eq3.
+  inversion typ.
+  reflexivity.
+  discriminate.
+  apply (IHtrm2).
+  split.
+  apply wfness.
+  destruct (eq_typ t1_1 t0) eqn:eq3.
+  inversion typ.
+  rewrite eq1.
+(*Here we just need to find a way to use the eq3*)
+
+
+
     
      
 (*Inductive typing : env -> term -> typ ->  Prop :=
