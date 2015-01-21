@@ -235,8 +235,7 @@ Inductive typing : env -> term -> typ ->  Prop :=
                   typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm (tsubst tp1 0 tp2).
 
 (*This function computes the minimal kind for a type term*)
-Require Import Program.
-Program Fixpoint kind (e : env) (tp : typ) : (option nat) :=
+Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
   | vart X => get_kind e X (* should also test if env if well formed *)
   | Top.arrow tp1 tp2 => match (kind e tp1, kind e tp2 ) with
@@ -258,7 +257,6 @@ Fixpoint eq_typ t1 t2 : bool :=
   | _ => false
   end.
 
-Require Import Program.
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
   | var x => get_typ e x
