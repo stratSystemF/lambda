@@ -335,11 +335,45 @@ Inductive typing (e : env) : term -> typ -> Prop :=
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
   | (vart x , vart y) => beq_nat x y
-  | (Top.arrow t11 t12 , Top.arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
+  | (Top.arrow t11 t12 , Top.arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t12 t22)
   | (fall k11 t12 , fall k22 t22) => andb (beq_nat k11 k22) (eq_typ t12 t22)
   | _ => false
   end
 .
+
+Theorem eq_typ_equiv: forall t1 t2, eq_typ t1 t2 = true <-> t1 = t2.
+Proof.
+induction t1; split; destruct t2; simpl; intro H; try discriminate.
++ rewrite beq_nat_eq with (x := n) (y := n0); intuition.
++ inversion H.
+  symmetry.
+  apply beq_nat_refl.
++ apply andb_true_iff in H; destruct H as [H1 H2].
+  specialize IHt1_1 with (t2 := t2_1); destruct IHt1_1 as [iht1 _].
+  specialize IHt1_2 with (t2 := t2_2); destruct IHt1_2 as [iht2 _].
+  rewrite (iht1 H1).
+  rewrite (iht2 H2).
+  reflexivity.
++ inversion H.
+  apply andb_true_iff; split.
+  - specialize IHt1_1 with (t2 := t2_1); destruct IHt1_1 as [_ iht1].
+    pattern t2_1 at 1; rewrite <- H1.
+    intuition.
+  - specialize IHt1_2 with (t2 := t2_2); destruct IHt1_2 as [_ iht2].
+    pattern t2_2 at 1; rewrite <- H2.
+    intuition.
++ apply andb_true_iff in H; destruct H as [H1 H2].
+  specialize IHt1 with (t2 := t2); destruct IHt1 as [iht1 _].
+  rewrite (iht1 H2).
+  rewrite beq_nat_eq with (x := n) (y := n0); intuition.
++ inversion H.
+  apply andb_true_iff; split.
+  - symmetry; apply beq_nat_refl.
+  - specialize IHt1 with (t2 := t2); destruct IHt1 as [_ iht1].
+    rewrite H2 in iht1.
+    apply iht1.
+    reflexivity.
+Qed.
 
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
@@ -562,7 +596,10 @@ induction trm; intros tp e typ; simpl in typ.
     reflexivity.
   - apply (IHtrm2).
     destruct (eq_typ t0_1 t0) eqn:eq3; try discriminate.
-    inversion typ.
     rewrite eq1.
-(*Here we just need to find a way to use the eq3*)
-
+    induction t0.
+    * specialize eq_typ_equiv with (t1 := t0_1) (t2 := vart n).
+      intros H; destruct H as [H1 H2].
+      rewrite H1; intuition.
+    * 
+      
