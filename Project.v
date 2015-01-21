@@ -486,6 +486,21 @@ Inductive typ_le (e : env) : typ -> typ -> Prop :=
 (* I´m not sure about the last case. *)
 .
 
-Theorem completeness_of_kind :
+Lemma typ_le_refl : forall e t1, wf_env e -> typ_le e t1 t1.
+Admitted.
 
+Theorem completeness_of_type :
+  forall trm e tp1,
+  typing e trm tp1 ->
+  (exists tp2, typ_le e tp2 tp1 /\ type e trm = Some tp2).
+Proof.
+induction trm; intros e tp1 tping; inversion tping.
++ exists tp1.
+  split.
+  - apply typ_le_refl; assumption.
+  - simpl.
+    rewrite <- wf_env_equiv in H1.
+    rewrite H1.
+    assumption.
++ 
 
