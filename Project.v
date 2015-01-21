@@ -332,8 +332,8 @@ Inductive typing (e : env) : term -> typ -> Prop :=
                 typing (v tp1 e) trm1 tp2 ->
                 typing e (abs tp1 trm1) (arrow tp1 tp2)
   | typed_app : forall (tp tp2 : typ) (trm1 trm2 : term),
-                typing e trm1 (arrow tp1 tp) ->
-                typing e trm2 tp1 ->
+                typing e trm1 (arrow tp2 tp) ->
+                typing e trm2 tp2 ->
                 typing e (Top.app trm1 trm2) tp 
   | typed_dept : forall (kl : nat) (trm1 : term) (tp1 : typ),
                  typing (v_typ kl e) trm1 tp1 ->
@@ -344,10 +344,11 @@ Inductive typing (e : env) : term -> typ -> Prop :=
                   typing e trm (tsubst tp1 0 tp2)
 .
 
-(* Actually this function tests for compatibility instead of equality *)
+(* eq_typ is the decidable equality of types
+   this is a strict inductive equality *)
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
-  | (vart x , vart y) => true (* It's only structural, we don't care about kinds*) 
+  | (vart x , vart y) => beq_nat x y
   | (Top.arrow t11 t12 , Top.arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
   | (fall k11 t12 , fall k22 t22) => andb (beq_nat k11 k22) (eq_typ t12 t22)
   | _ => false
@@ -356,45 +357,41 @@ Fixpoint eq_typ t1 t2 : bool :=
 
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
-  | var x => get_typ e x
+  | var x => if wf_env_bool e then get_typ e x else None
   | abs tp1 trm1 => 
     match kind e tp1 with
-        | Some a =>
-          match type (v tp1 e) trm1  with 
-                         | None => None 
-                         | Some tp2 => Some (Top.arrow tp1 tp2)
-          end
-        | None => None
+    | Some a =>
+      match type (v tp1 e) trm1  with 
+      | None => None 
+      | Some tp2 => Some (Top.arrow tp1 tp2)
+      end
+    | None => None
     end
   | Top.app trm1 trm2 =>
-      match type e trm1  with
-      | Some (Top.arrow tp1 tp) => match type e trm2 with
-                               | None => None
-                               | Some tp_1 => if eq_typ tp1 tp_1 then Some tp else None
-                               end
-      | _ => None
+    match type e trm1  with
+    | Some (Top.arrow tp1 tp) =>
+      match type e trm2 with
+      | None => None
+      | Some tp_1 => if eq_typ tp1 tp_1 then Some tp else None
       end
-  | dept k1 trm1 => match type (v_typ k1 e) trm1  with 
-                      | None => None 
-                      | Some tp1 => Some (fall k1 tp1) 
-                    end
+    | _ => None
+    end
+  | dept k1 trm1 =>
+    match type (v_typ k1 e) trm1  with 
+    | None => None 
+    | Some tp1 => Some (fall k1 tp1) 
+    end
   | applt trm1 tp2 =>
-      match type e trm1  with
-      | Some (fall k tp1) =>
-          match kind e tp2  with
-            | Some k1 => if beq_nat k1 k then Some (tsubst tp1 0 tp2) else None
-            | _ => None
-          end
+    match type e trm1  with
+    | Some (fall k tp1) =>
+      match kind e tp2  with
+      | Some k1 => if beq_nat k1 k then Some (tsubst tp1 0 tp2) else None
       | _ => None
-      end
+    end
+    | _ => None
+    end
   end
 .
-
-
-
-
-Print typing_ind.
-
 
 Lemma weakget: forall e n t, get_kind e n <> None -> get_kind (v t e) n <> None.
 Proof.
@@ -505,6 +502,7 @@ Qed.
 (*   simpl. *)
 (*   induction n0. *)
 (*   apply eq. *)
+(*
 Lemma kind2wf : forall tp e, wf_env e -> (exists n, kind e tp = Some n) -> wf_typ e tp. 
 Proof.
 induction tp.
@@ -550,87 +548,41 @@ induction tp.
  reflexivity.
  discriminate.
 Qed.
- 
+*)
 
-Theorem soundness_of_typ :
-  forall trm tp e, (wf_env e /\ type e trm = Some tp) -> (typing e trm tp).
+Theorem soundness_of_type :
+  forall trm tp e, type e trm = Some tp -> typing e trm tp.
 Proof.
-induction trm.
-+intros tp e and.
- destruct and as [wfness typ].
- simpl in typ.
- apply (typed_var). 
- apply typ.
- apply wfness.
-+intros tp e and.
- destruct and as [wfness typ]. 
- simpl in typ.
- destruct (type (v t e) trm) eqn:eq.
- destruct (kind e t) eqn:eq1.
- inversion typ.
-
- apply (typed_abs) .
- apply IHtrm.
- split.
- simpl.
- split.
- simpl.
- apply (kind2wf).
- apply wfness.
- exists n.
- apply eq1.
- apply wfness.
- apply eq.
- discriminate.
- destruct (kind e t).
- discriminate.
- discriminate.
-+ intros tp e and.
-  destruct and as [wfness typ].
-  simpl in typ.
-  destruct (type e trm1) eqn:eq.
-  destruct (type e trm2) eqn:eq1.
-  destruct (t) eqn:eq2.
-  discriminate.
-  apply (typed_app e tp trm1 trm2 t1_1 ).
-  apply (IHtrm1).
-  split.
-  apply wfness.
-  rewrite eq.
-  destruct (eq_typ t1_1 t0) eqn:eq3.
-  inversion typ.
-  reflexivity.
-  discriminate.
-  apply (IHtrm2).
-  split.
-  apply wfness.
-  destruct (eq_typ t1_1 t0) eqn:eq3.
-  inversion typ.
-  rewrite eq1.
+induction trm; intros tp e typ; simpl in typ.
++ apply (typed_var). 
+  - destruct (wf_env_bool e).
+    * assumption.
+    * discriminate.
+  - apply wf_env_equiv.
+    destruct (wf_env_bool e).
+    * trivial.
+    * discriminate.
++ destruct (kind e t) eqn:eq1.
+  - destruct (type (v t e) trm) eqn:eq.
+    * inversion typ.
+      apply (typed_abs).
+      apply IHtrm.
+      assumption.
+    * discriminate.
+  - discriminate.
++ destruct (type e trm1) eqn:eq.
+  - destruct (type e trm2) eqn:eq1.
+    * destruct (t) eqn:eq2.
+        discriminate.
+        apply (typed_app e tp t1_1 trm1 trm2).
+          apply (IHtrm1).
+          rewrite eq.
+          destruct (eq_typ t1_1 t0) eqn:eq3.
+            inversion typ.
+            reflexivity.
+            discriminate.
+          apply (IHtrm2).
+          destruct (eq_typ t1_1 t0) eqn:eq3.
+            inversion typ.
+            rewrite eq1.
 (*Here we just need to find a way to use the eq3*)
-
-
-
-    
-     
-(*Inductive typing : env -> term -> typ ->  Prop :=
-  | typed_var : forall (e:env) (trm:term) (tp:typ),
-                forall (x : nat),
-                   ( trm = var x :> term ) ->
-                   (get_typ e x = Some tp :> option typ) ->
-                   wf_env e ->
-                   typing e trm tp
-  | typed_abs : forall (e:env) (trm:term) (tp:typ), 
-                forall (tp1:typ) (trm1:term) (tp_1: typ) (tp_2:typ),
-            trm = abs tp1 trm1 ->  tp = arrow tp_1 tp_2 -> tp_1 = tp1  -> typing (v tp1 e) trm1 tp_2 
-             -> typing e trm tp
-  | typed_app : forall (e:env) (trm:term) (tp:typ),
-              forall (trm1 trm2:term) (tp1:typ),
-                trm = Top.app trm1 trm2  ->  typing e trm1 (arrow tp1 tp) -> typing e trm2 tp1 -> typing e trm tp 
-  | typed_dept : forall (e:env) (trm:term) (tp:typ),
-                  forall (kl k_l:nat) (trm1: term) (tp_1:typ),
-                     trm = dept kl trm1 -> tp = fall k_l tp_1 -> kl=k_l -> typing (v_typ kl e) trm1 tp_1 -> typing e trm tp
-  | typed_applt : forall (e:env) (trm:term) (tp:typ),
-                    forall (trm1:term) (tp2 tp1:typ) (k:nat),
-                      tsubst tp1 0 tp2 = tp -> typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm tp.
-*) 
