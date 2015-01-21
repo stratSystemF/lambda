@@ -12,10 +12,10 @@ Require Import Omega.
 Local Open Scope nat_scope.
 
 Inductive typ := 
-  | vart : nat -> typ
+| vart : nat -> typ
 (* The latter nat is the de Brujin index of the type variable. *)
-  | arrow : typ -> typ -> typ
-  | fall : nat -> typ -> typ.
+| arrow : typ -> typ -> typ
+| fall : nat -> typ -> typ.
 (* The latter nat is the kind of the type which is abstracted. *)
 
 (* The environment is a stack of values *
@@ -30,9 +30,9 @@ Inductive typ :=
  *)
 Fixpoint tshift (t:typ) (v:nat) : typ := 
    match t with
-       | vart i   =>  vart (if le_gt_dec v i then 1 + i else i  )
-       | arrow t1 t2  => arrow (tshift t1 v) (tshift t2 v) 
-       | fall rank sP  => fall rank (tshift sP (1 + v)) 
+   | vart i   =>  vart (if le_gt_dec v i then 1 + i else i  )
+   | arrow t1 t2  => arrow (tshift t1 v) (tshift t2 v) 
+   | fall rank sP  => fall rank (tshift sP (1 + v)) 
    end.
 
 (*I have to write an example about that*)
@@ -42,39 +42,39 @@ Fixpoint tshift (t:typ) (v:nat) : typ :=
  *)
 Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ := 
   match t with
-      | vart l => (*several cases*)
-        if beq_nat v l then
-          newt (*That's the variable to substitue*)
-        else if le_gt_dec l v then (*That's a variable before the target variable*) 
-          vart l
-        else (* That's a free variable, but we have a hole (we removed the variable)
-              * so we need to garbage collect the name of this variable. *)
-          vart (l-1)               
-      | arrow t1 t2 => arrow (tsubst t1 v newt) (tsubst t2 v newt)
-      | fall rank sp => fall rank (tsubst sp (1 + v) (tshift newt 0)) 
+  | vart l => (*several cases*)
+    if beq_nat v l then
+      newt (*That's the variable to substitue*)
+    else if le_gt_dec l v then (*That's a variable before the target variable*) 
+      vart l
+    else (* That's a free variable, but we have a hole (we removed the variable)
+          * so we need to garbage collect the name of this variable. *)
+      vart (l-1)               
+  | arrow t1 t2 => arrow (tsubst t1 v newt) (tsubst t2 v newt)
+  | fall rank sp => fall rank (tsubst sp (1 + v) (tshift newt 0)) 
   end.
 
 
 Inductive term :=
-  | var : nat -> term
+| var : nat -> term
 (* The latter nat is the de Brujin index of the term variable. *)
-  | abs : typ -> term -> term
+| abs : typ -> term -> term
 (* The latter typ is the type of the term which is abstracted. *)
-  | app : term -> term -> term
-  | dept : nat -> term -> term
+| app : term -> term -> term
+| dept : nat -> term -> term
 (* The latter nat is the kind of the type which is abstracted. *)
-  | applt: term -> typ -> term.
+| applt: term -> typ -> term.
 
 (* The following function shifts the free term variables by one within the term t.
  * v is the number of bounded variables - ie number of lambda abstractions - in t.
  *)
 Fixpoint shift (t:term) (v:nat) : term :=
    match t with
-       | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
-       | abs tp trm  => abs tp (shift trm (1 + v)) 
-       | app trm1 trm2  => app (shift trm1 v) (shift trm2 v)
-       | dept i trm => dept i (shift trm v) 
-       | applt trm tp =>  applt (shift trm v) tp
+   | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
+   | abs tp trm  => abs tp (shift trm (1 + v)) 
+   | app trm1 trm2  => app (shift trm1 v) (shift trm2 v)
+   | dept i trm => dept i (shift trm v) 
+   | applt trm tp =>  applt (shift trm v) tp
    end.
 
 (* The following function shifts the free type variables by one within the term t.
@@ -82,11 +82,11 @@ Fixpoint shift (t:term) (v:nat) : term :=
  *)
 Fixpoint shift_typ (t:term) (v:nat) : term :=
    match t with
-       | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
-       | abs tp trm  => abs tp (shift_typ trm v) 
-       | app trm1 trm2  => app (shift_typ trm1 v) (shift_typ trm2 v)
-       | dept i trm => dept i (shift_typ trm (1 + v)) 
-       | applt trm tp =>  applt (shift_typ trm v) tp
+   | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
+   | abs tp trm  => abs tp (shift_typ trm v) 
+   | app trm1 trm2  => app (shift_typ trm1 v) (shift_typ trm2 v)
+   | dept i trm => dept i (shift_typ trm (1 + v)) 
+   | applt trm tp =>  applt (shift_typ trm v) tp
    end.
 
 (* The following function substitutes the type variable number v by newt inside t.
@@ -95,13 +95,13 @@ Fixpoint shift_typ (t:term) (v:nat) : term :=
  *)
 Fixpoint subst_typ (trm:term) (v:nat) (newt:typ) := 
   match trm with
-      | var l => var l 
-      | abs tp trm => abs (tsubst tp v newt) (subst_typ trm v newt)
-      | app trm1 trm2 => app (subst_typ trm1 v newt) (subst_typ trm2 v newt)
-      | dept i trm => dept i (subst_typ trm (1 + v) (tshift newt 0))
-(*We need to bound FTV correctly, so we shift each time we cross a forall*)
-      | applt trm tp => applt (subst_typ trm v newt) (tsubst tp v newt)
-   end.
+  | var l => var l 
+  | abs tp trm => abs (tsubst tp v newt) (subst_typ trm v newt)
+  | app trm1 trm2 => app (subst_typ trm1 v newt) (subst_typ trm2 v newt)
+  | dept i trm => dept i (subst_typ trm (1 + v) (tshift newt 0))
+  (*We need to bound FTV correctly, so we shift each time we cross a forall*)
+  | applt trm tp => applt (subst_typ trm v newt) (tsubst tp v newt)
+  end.
 
 (* The following function substitutes the term variable number v by newt inside t.
  * It is assumed that v is removed from the environment stack
@@ -109,18 +109,18 @@ Fixpoint subst_typ (trm:term) (v:nat) (newt:typ) :=
  *)
 Fixpoint subst (trm:term) (v:nat) (newt:term) :=
   match trm with
-    | var l =>
-        if beq_nat l v then newt
-        else if le_gt_dec l v then (*That's a variable before the target variable*) 
-          var l
-        else (* That's a free variable, but we have a hole (we removed the variable)
-              * so we need to garbage collect the name of this variable. *)
-          var (l-1)
-    | abs tp trm => abs tp (subst trm (1 + v) (shift newt 0))
-    | app trm1 trm2 => app (subst trm1 v newt) (subst trm2 v newt)
-    | dept i trm => dept i (subst trm v (shift_typ newt 0))
-    (* We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
-    | applt trm tp => applt (subst trm v newt) tp
+  | var l =>
+    if beq_nat l v then newt
+    else if le_gt_dec l v then (*That's a variable before the target variable*) 
+      var l
+    else (* That's a free variable, but we have a hole (we removed the variable)
+          * so we need to garbage collect the name of this variable. *)
+      var (l-1)
+  | abs tp trm => abs tp (subst trm (1 + v) (shift newt 0))
+  | app trm1 trm2 => app (subst trm1 v newt) (subst trm2 v newt)
+  | dept i trm => dept i (subst trm v (shift_typ newt 0))
+  (* We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
+  | applt trm tp => applt (subst trm v newt) tp
   end.
 
 (* Environments *)
@@ -133,22 +133,22 @@ Import ListNotations.
  *)
 
 Inductive env :=
-  | empty : env
-  | v_typ : nat -> env -> env
+| empty : env
+| v_typ : nat -> env -> env
 (* The latter nat is a kind. *)
-  | v : typ -> env -> env.
+| v : typ -> env -> env.
 
 (* The following function is used to get the type of the term variable
  * of index i in the environment e.
  *)
 Fixpoint get_typ e (i:nat) :=
   match e with
-      | empty => None
-      | v_typ k tl => get_typ tl i
-      | v t tl => match i with
-                      | 0 => Some t
-                      | S x => get_typ tl x
-                  end
+  | empty => None
+  | v_typ k tl => get_typ tl i
+  | v t tl => match i with
+              | 0 => Some t
+              | S x => get_typ tl x
+              end
   end.
 
 (* The following function is used to get the kind of the type variable
@@ -156,13 +156,13 @@ Fixpoint get_typ e (i:nat) :=
  *)
 Fixpoint get_kind e (i:nat) :=
   match e with
-      | empty => None
-      | v_typ k tl => match i with
-                          | 0 => Some k
-                          | S x => get_kind tl x 
-                      end
+  | empty => None
+  | v_typ k tl => match i with
+                  | 0 => Some k
+                  | S x => get_kind tl x 
+                  end
 
-      | v t tl => get_kind tl i
+  | v t tl => get_kind tl i
   end.
                   
 (*Comes from subject*)
@@ -219,16 +219,16 @@ Qed.
 
 (* After Figure 5: Stratified System F Kinding Rules *)
 Inductive kinding (e : env) : typ -> nat -> Prop :=
-  | kinded_var : forall X k p,
+| kinded_var : forall X k p,
                   get_kind e X = Some p ->
                   p <= k ->
                   wf_env e ->
                   kinding e (vart X) k
-  | kinded_arrow : forall tp1 tp2 p q,
+| kinded_arrow : forall tp1 tp2 p q,
                     kinding e tp1 p ->
                     kinding e tp2 q ->
                     kinding e (arrow tp1 tp2) (max p q)
-  | kinded_fall : forall k1 tp1 p,
+| kinded_fall : forall k1 tp1 p,
                    kinding (v_typ k1 e) tp1 p ->
                    kinding e (fall k1 tp1) (1 + max p k1)
 .
@@ -238,9 +238,9 @@ Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
   | vart X => if wf_env_bool e then get_kind e X else None
   | Top.arrow tp1 tp2 => match (kind e tp1, kind e tp2 ) with
-                     | (Some p , Some q) => Some (max p q)
-                     | _ => None
-                     end
+                         | (Some p , Some q) => Some (max p q)
+                         | _ => None
+                         end
   | fall k1 tp1 => match kind (v_typ k1 e) tp1  with
                    | Some p => Some (1 + max p k1)
                    | None => None
@@ -310,21 +310,21 @@ Qed.
 
 (* After Figure 6: Stratified System F Type-Checking Rules *)
 Inductive typing (e : env) : term -> typ -> Prop :=
-  | typed_var : forall (tp : typ) (x : nat),
+| typed_var : forall (tp : typ) (x : nat),
                 get_typ e x = Some tp ->
                 wf_env e ->
                 typing e (var x) tp
-  | typed_abs : forall (tp1 tp2 : typ) (trm1 : term),
+| typed_abs : forall (tp1 tp2 : typ) (trm1 : term),
                 typing (v tp1 e) trm1 tp2 ->
                 typing e (abs tp1 trm1) (arrow tp1 tp2)
-  | typed_app : forall (tp tp2 : typ) (trm1 trm2 : term),
+| typed_app : forall (tp tp2 : typ) (trm1 trm2 : term),
                 typing e trm1 (arrow tp2 tp) ->
                 typing e trm2 tp2 ->
                 typing e (Top.app trm1 trm2) tp 
-  | typed_dept : forall (kl : nat) (trm1 : term) (tp1 : typ),
+| typed_dept : forall (kl : nat) (trm1 : term) (tp1 : typ),
                  typing (v_typ kl e) trm1 tp1 ->
                  typing e (dept kl trm1) (fall kl tp1)
-  | typed_applt : forall (trm : term) (tp1 tp2 : typ) (k : nat),
+| typed_applt : forall (trm : term) (tp1 tp2 : typ) (k : nat),
                   typing e trm (fall k tp1) ->
                   kinding e tp2 k ->
                   typing e (applt trm tp2) (tsubst tp1 0 tp2)
