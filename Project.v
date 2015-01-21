@@ -187,16 +187,10 @@ Fixpoint wf_typ_bool (e : env) (T : typ) {struct T} : bool :=
 Theorem wf_typ_equiv : forall T e, wf_typ_bool e T = true <-> wf_typ e T.
 Proof.
 induction T; simpl; intros e.
-+ destruct (get_kind e n).
-  - intuition.
-    discriminate.
-  - intuition.
++ destruct (get_kind e n); intuition.
+  discriminate.
 + rewrite andb_true_iff.
-  intuition.
-  - apply IHT1; assumption.
-  - apply IHT2; assumption.
-  - apply IHT1; assumption.
-  - apply IHT2; assumption.
+  intuition; try (apply IHT1); try (apply IHT2); assumption.
 + apply IHT; assumption.
 Qed.
 
@@ -258,34 +252,26 @@ Theorem soundness_of_kind : forall tp e k, kind e tp = Some k -> kinding e tp k.
 Proof.
 induction tp; intros e k H; simpl in H.
 + apply kinded_var with (p := k).
-  - destruct (wf_env_bool e).
-    * assumption.
-    * discriminate.
-  - destruct (wf_env_bool e).
-    * trivial.
-    * discriminate.
+  - destruct (wf_env_bool e); trivial.
+    discriminate.
+  - destruct (wf_env_bool e); trivial.
   - apply wf_env_equiv.
-    destruct (wf_env_bool e).
-    * trivial.
-    * discriminate.
+    destruct (wf_env_bool e); trivial.
+    discriminate.
 + specialize IHtp1 with (e := e).
   specialize IHtp2 with (e := e).
-  induction (kind e tp1) as [q1 | _].
-  - induction (kind e tp2) as [q2 | _].
-    * inversion H as [h].
-      apply kinded_arrow.
-        apply IHtp1; reflexivity.
-        apply IHtp2; reflexivity.
-    * discriminate.
-  - discriminate.
+  destruct (kind e tp1) as [q1 | _]; try discriminate.
+  destruct (kind e tp2) as [q2 | _]; try discriminate.
+  inversion H as [h].
+  apply kinded_arrow.
+  - apply IHtp1; reflexivity.
+  - apply IHtp2; reflexivity.
 + specialize IHtp with (e := (v_typ n e)).
-  induction (kind (v_typ n e)) as [p | _].
-  - inversion H as [h].
-    apply kinded_fall.
-    apply IHtp; reflexivity.
-  - discriminate.
+  destruct (kind (v_typ n e)) as [p | _]; try discriminate.
+  inversion H as [h].
+  apply kinded_fall.
+  apply IHtp; reflexivity.
 Qed.
-
 
 Theorem completeness_of_kind :
   forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
@@ -555,34 +541,28 @@ Theorem soundness_of_type :
 Proof.
 induction trm; intros tp e typ; simpl in typ.
 + apply (typed_var). 
-  - destruct (wf_env_bool e).
-    * assumption.
-    * discriminate.
+  - destruct (wf_env_bool e); trivial.
+    discriminate.
   - apply wf_env_equiv.
-    destruct (wf_env_bool e).
-    * trivial.
-    * discriminate.
-+ destruct (kind e t) eqn:eq1.
-  - destruct (type (v t e) trm) eqn:eq.
-    * inversion typ.
-      apply (typed_abs).
-      apply IHtrm.
-      assumption.
-    * discriminate.
-  - discriminate.
-+ destruct (type e trm1) eqn:eq.
-  - destruct (type e trm2) eqn:eq1.
-    * destruct (t) eqn:eq2.
-        discriminate.
-        apply (typed_app e tp t1_1 trm1 trm2).
-          apply (IHtrm1).
-          rewrite eq.
-          destruct (eq_typ t1_1 t0) eqn:eq3.
-            inversion typ.
-            reflexivity.
-            discriminate.
-          apply (IHtrm2).
-          destruct (eq_typ t1_1 t0) eqn:eq3.
-            inversion typ.
-            rewrite eq1.
+    destruct (wf_env_bool e); trivial.
+    discriminate.
++ destruct (kind e t) eqn:eq1; try discriminate.
+  destruct (type (v t e) trm) eqn:eq; try discriminate.
+  inversion typ.
+  apply (typed_abs).
+  apply IHtrm; assumption.
++ destruct (type e trm1) eqn:eq; try discriminate.
+  destruct (t) eqn:eq2; try discriminate.
+  destruct (type e trm2) eqn:eq1; try discriminate.
+  apply (typed_app e tp t0_1 trm1 trm2).
+  - apply (IHtrm1).
+    rewrite eq.
+    destruct (eq_typ t0_1 t0) eqn:eq3; try discriminate.
+    inversion typ.
+    reflexivity.
+  - apply (IHtrm2).
+    destruct (eq_typ t0_1 t0) eqn:eq3; try discriminate.
+    inversion typ.
+    rewrite eq1.
 (*Here we just need to find a way to use the eq3*)
+
