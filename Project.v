@@ -5,6 +5,9 @@ Require Import Lt.
 Require Import Gt.
 Require Import Decidable.
 Require Import Max.
+Require Import NPeano.
+Require Import GenericMinMax.
+Require Import Bool.
 Require Import Omega.
 Local Open Scope nat_scope.
 
@@ -170,6 +173,33 @@ Fixpoint wf_typ (e : env) (T : typ) {struct T} : Prop :=
   | fall k T2   => wf_typ (v_typ k e) T2 
   end.
 
+
+Local Open Scope bool_scope.
+
+Fixpoint wf_typ_bool (e : env) (T : typ) {struct T} : bool :=
+  match T with
+  | vart X      => match get_kind e X with | None => false | _ => true end
+  | arrow T1 T2 => wf_typ_bool e T1 && wf_typ_bool e T2
+  | fall k T2   => wf_typ_bool (v_typ k e) T2 
+  end
+.
+
+Theorem wf_typ_equiv : forall T e, wf_typ_bool e T = true <-> wf_typ e T.
+Proof.
+induction T; simpl; intros e.
++ destruct (get_kind e n).
+  - intuition.
+    discriminate.
+  - intuition.
++ rewrite andb_true_iff.
+  intuition.
+  - apply IHT1; assumption.
+  - apply IHT2; assumption.
+  - apply IHT1; assumption.
+  - apply IHT2; assumption.
++ apply IHT; assumption.
+Qed.
+
 Fixpoint wf_env (e : env) : Prop :=
   match e with
   | empty     => True
@@ -177,43 +207,122 @@ Fixpoint wf_env (e : env) : Prop :=
   | v_typ T e => wf_env e
   end.
 
+Fixpoint wf_env_bool (e : env) : bool :=
+  match e with
+  | empty     => true
+  | v T e     => andb (wf_typ_bool e T) (wf_env_bool e)
+  | v_typ T e => wf_env_bool e
+  end.
+
+Theorem wf_env_equiv : forall e, wf_env_bool e = true <-> wf_env e.
+Proof.
+induction e; simpl.
++ intuition.
++ assumption.
++ rewrite andb_true_iff.
+  intuition; apply wf_typ_equiv; assumption.
+Qed.
+
 (* After Figure 5: Stratified System F Kinding Rules *)
-Fixpoint kinding (e : env) (tp : typ) (k : nat) : Prop :=
+Inductive kinding (e : env) : typ -> nat -> Prop :=
+  | kinded_var : forall X k p,
+                  get_kind e X = Some p ->
+                  p <= k ->
+                  wf_env e ->
+                  kinding e (vart X) k
+  | kinded_arrow : forall tp1 tp2 p q,
+                    kinding e tp1 p ->
+                    kinding e tp2 q ->
+                    kinding e (arrow tp1 tp2) (max p q)
+  | kinded_fall : forall k1 tp1 p,
+                   kinding (v_typ k1 e) tp1 p ->
+                   kinding e (fall k1 tp1) (1 + max p k1)
+.
+
+(* This function computes the minimal kind for a type term *)
+Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
-  | vart X => exists p, get_kind e X = Some p /\ p <= k /\ wf_env e
-  | arrow tp1 tp2 =>
-      exists (p q : nat), kinding e tp1 p /\ kinding e tp2 q /\ k = max p q
-  | fall k1 tp1 =>
-      exists p, kinding (v_typ k1 e) tp1 p /\ k = 1 + max p k1
+  | vart X => if wf_env_bool e then get_kind e X else None
+  | Top.arrow tp1 tp2 => match (kind e tp1, kind e tp2 ) with
+                     | (Some p , Some q) => Some (max p q)
+                     | _ => None
+                     end
+  | fall k1 tp1 => match kind (v_typ k1 e) tp1  with
+                   | Some p => Some (1 + max p k1)
+                   | None => None
+                   end
   end
 .
 
+Theorem soundness_of_kind : forall tp e k, kind e tp = Some k -> kinding e tp k.
+Proof.
+induction tp; intros e k H; simpl in H.
++ apply kinded_var with (p := k).
+  - destruct (wf_env_bool e).
+    * assumption.
+    * discriminate.
+  - destruct (wf_env_bool e).
+    * trivial.
+    * discriminate.
+  - apply wf_env_equiv.
+    destruct (wf_env_bool e).
+    * trivial.
+    * discriminate.
++ specialize IHtp1 with (e := e).
+  specialize IHtp2 with (e := e).
+  induction (kind e tp1) as [q1 | _].
+  - induction (kind e tp2) as [q2 | _].
+    * inversion H as [h].
+      apply kinded_arrow.
+        apply IHtp1; reflexivity.
+        apply IHtp2; reflexivity.
+    * discriminate.
+  - discriminate.
++ specialize IHtp with (e := (v_typ n e)).
+  induction (kind (v_typ n e)) as [p | _].
+  - inversion H as [h].
+    apply kinded_fall.
+    apply IHtp; reflexivity.
+  - discriminate.
+Qed.
+
+
+Theorem completeness_of_kind :
+  forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
+Proof.
+induction tp; intros e k kding; inversion kding.
++ exists p.
+  intuition.
+  rewrite <- H.
+  simpl.
+  rewrite <- wf_env_equiv in H2.
+  rewrite H2.
+  rewrite H.
+  assumption.
++ intuition.
+  simpl.
+  specialize IHtp1 with (e := e) (k := p).
+  specialize IHtp2 with (e := e) (k := q).
+  destruct (IHtp1 H1) as [p0 [h1 h2]].
+  destruct (IHtp2 H3) as [q0 [h3 h4]].
+  exists (max p0 q0).
+  split.
+  - apply Nat.max_le_compat; assumption.
+  - rewrite h2; rewrite h4; reflexivity.
++ specialize IHtp with (e := (v_typ n e)) (k := p).
+  destruct (IHtp H2) as [p0 [h1 h2]].
+  exists (1 + max p0 n). 
+  split.
+  * simpl.
+    apply le_n_S.
+    apply Nat.max_le_compat_r.
+    assumption.
+  * simpl.
+    rewrite h2.
+    reflexivity.
+Qed. 
+
 (* After Figure 6: Stratified System F Type-Checking Rules *)
-(*
-Fixpoint typing (e : env) (trm : term) (tp : typ) {struct trm} : Prop :=
-  match trm with
-  | var x => get_typ e x = Some tp /\ wf_env e
-  | abs tp1 trm1 =>
-      match tp with
-      | arrow tp_1 tp_2 => tp_1 = tp1 /\ typing (v tp1 e) trm1 tp_2
-      | _ => False
-      end
-  | Top.app trm1 trm2 =>
-      exists (tp1 : typ), typing e trm1 (arrow tp1 tp) /\ typing e trm2 tp1
-  | dept k1 trm1 =>
-      match tp with
-      | fall k_1 tp_1 => k1 = k_1 /\ typing (v_typ k1 e) trm1 tp_1
-      | _ => False
-      end
-  | applt trm1 tp2 =>
-      exists (tp1 : typ) (k : nat),
-        tsubst tp1 0 tp2 = tp /\
-        typing e trm1 (fall k tp1) /\
-        kinding e tp2 k
-  end
-.*)
-
-
 Inductive typing : env -> term -> typ ->  Prop :=
   | typed_var : forall (e:env) (tp:typ) (x:nat),
                    (get_typ e x = Some tp :> option typ) ->
@@ -232,21 +341,8 @@ Inductive typing : env -> term -> typ ->  Prop :=
                   typing (v_typ kl e) trm1 tp_1 -> typing e (dept kl trm1) (fall kl tp_1)
   | typed_applt : forall (e:env) (trm:term) (tp:typ),
                   forall (trm1:term) (tp2 tp1:typ) (k:nat),
-                  typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm (tsubst tp1 0 tp2).
-
-(*This function computes the minimal kind for a type term*)
-Fixpoint kind (e : env) (tp : typ) : (option nat) :=
-  match tp with
-  | vart X => get_kind e X (* should also test if env if well formed *)
-  | Top.arrow tp1 tp2 => match (kind e tp1, kind e tp2 ) with
-                     | (Some p , Some q) => Some (max p q)
-                     | _ => None
-                     end
-  | fall k1 tp1 => match kind (v_typ k1 e) tp1  with
-                   | Some p => Some (1 + max p k1)
-                   | None => None
-                   end
-  end.
+                  typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm (tsubst tp1 0 tp2)
+.
 
 (* Actually this function tests for compatibility instead of equality *)
 Fixpoint eq_typ t1 t2 : bool :=
@@ -255,7 +351,8 @@ Fixpoint eq_typ t1 t2 : bool :=
   | (Top.arrow t11 t12 , Top.arrow t21 t22) => andb (eq_typ t11 t21) (eq_typ t21 t22)
   | (fall k11 t12 , fall k22 t22) => andb (beq_nat k11 k22) (eq_typ t12 t22)
   | _ => false
-  end.
+  end
+.
 
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
@@ -294,130 +391,7 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
 .
 
 
-(* Remark that the wf_env condition appears here and not in the definition
- * of kind.
- *)
-Theorem soundness_of_kind :
-  forall tp e k, (wf_env e /\ kind e tp = Some k) -> (kinding e tp k).
-Proof.
-induction tp.
-+ intros e k lhs.
-  destruct lhs as [well_formedness H].
-  unfold kinding.
-  exists k.
-  split.
-  - rewrite <- H.
-    unfold kind.
-    reflexivity.
-  - split.
-      reflexivity.
-      exact well_formedness.
-+ intros e k lhs.
-  destruct lhs as [well_formedness H].
-  simpl in H.
-  specialize IHtp1 with (e := e).
-  specialize IHtp2 with (e := e).
-  induction (kind e tp1) as [q1 | _].
-  - induction (kind e tp2) as [q2 | _]. 
-    * inversion H as [h].
-      simpl. 
-      exists q1.
-      exists q2.
-      split.
-        apply IHtp1.
-        split.
-          exact well_formedness.
-          reflexivity.
-        split.
-          apply IHtp2.
-          split.
-            exact well_formedness.
-            split.
-              reflexivity.
-    * discriminate.
-  - discriminate.
-+ intros e k lhs.
-  destruct lhs as [well_formedness H].
-  simpl in H.
-  specialize IHtp with (e := (v_typ n e)).
-  induction (kind (v_typ n e)) as [p | _].
-  - inversion H as [h].
-    simpl.
-    exists p.
-    split.
-    * apply IHtp.
-      split.
-        simpl.
-        exact well_formedness.
-        reflexivity.
-    * reflexivity.
-  - discriminate.
-Qed.
 
-
-Require Import GenericMinMax.
-
-
-Theorem cness_of_kind :
-  forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
-Proof.
-induction tp.
-- intros e k kding.
-  destruct kding as [x H].
-  exists x.
-  destruct H as [H H0].
-  destruct H0 as [H0 H1].
-  split.
-  * apply H0.
-  * rewrite <- H.
-    simpl.
-    reflexivity.
-- intros e k kding.
-  destruct kding as [x [x0 [k1 [k2 eq]]]].
-  destruct (IHtp1 e x k1) as [x1 H1].
-  destruct (IHtp2 e x0 k2) as [x2 H2].
-  exists (max x1 x2).
-  split.
-  * destruct H1 as [iequal1 k'1].
-    destruct H2 as [iequal2 k'2].
-    apply max_lub.
-    transitivity x.
-    apply iequal1.
-    rewrite eq.
-    apply le_max_l.
-    transitivity x0.
-    apply iequal2.
-    rewrite eq.
-    apply le_max_r.
-  * simpl.
-    destruct H1 as [H1 H'1].
-    destruct H2 as [H2 H'2] .
-    rewrite H'1.
-    rewrite H'2.
-    reflexivity.
-- intros e k kding.
-  destruct kding as [x [H H0]].
-  destruct (IHtp (v_typ n e) (x) H) as [x0 [H1 H2]].
-  exists (1 + max x0 n). 
-  split.
-  * simpl.
-    transitivity (S(max x n)).
-    apply le_n_S.
-    apply max_lub.
-    transitivity x.
-    apply H1.
-    apply le_max_l.
-    apply le_max_r.
-    rewrite H0.
-    simpl.
-    auto.
-  * simpl.
-    destruct (kind (v_typ n e) tp). 
-    inversion H2 as [H3].
-    + rewrite <- H3.
-    reflexivity.
-    + discriminate.
-Qed. 
 
 Print typing_ind.
 
