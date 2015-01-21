@@ -605,5 +605,12 @@ induction trm; intros tp e typ; simpl in typ.
       rewrite eq3; reflexivity.
     * apply eq_typ_equiv in eq3.
       rewrite eq3; reflexivity.
++ destruct (type (v_typ n e) trm) eqn:eq; try discriminate.
+  destruct tp; try discriminate.
+  inversion typ.
+  rewrite <- H0.
+  apply (typed_dept e n trm tp).
+  apply IHtrm. 
+  rewrite <- H1.
+  assumption.
 + 
-      
