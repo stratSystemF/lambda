@@ -324,10 +324,10 @@ Inductive typing (e : env) : term -> typ -> Prop :=
   | typed_dept : forall (kl : nat) (trm1 : term) (tp1 : typ),
                  typing (v_typ kl e) trm1 tp1 ->
                  typing e (dept kl trm1) (fall kl tp1)
-  | typed_applt : forall (trm trm1 : term) (tp tp1 tp2 : typ) (k:nat),
-                  typing e trm1 (fall k tp1) ->
+  | typed_applt : forall (trm : term) (tp1 tp2 : typ) (k : nat),
+                  typing e trm (fall k tp1) ->
                   kinding e tp2 k ->
-                  typing e trm (tsubst tp1 0 tp2)
+                  typing e (applt trm tp2) (tsubst tp1 0 tp2)
 .
 
 (* eq_typ is the decidable equality of types
@@ -613,4 +613,18 @@ induction trm; intros tp e typ; simpl in typ.
   apply IHtrm. 
   rewrite <- H1.
   assumption.
-+ 
++ destruct (type e trm) eqn:eq; try discriminate.
+  destruct t0; try discriminate.
+  destruct (kind e t) eqn:eq1; try discriminate.
+  destruct (beq_nat n0 n) eqn:eq2; try discriminate.
+  inversion typ.
+  apply (typed_applt e trm t0 t n).
+  - apply IHtrm.
+    assumption.
+  - apply soundness_of_kind.
+    rewrite eq1.
+    rewrite beq_nat_eq with (x := n0) (y := n); intuition.
+Qed.
+
+
+
