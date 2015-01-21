@@ -601,5 +601,9 @@ induction trm; intros tp e typ; simpl in typ.
     * specialize eq_typ_equiv with (t1 := t0_1) (t2 := vart n).
       intros H; destruct H as [H1 H2].
       rewrite H1; intuition.
-    * 
+    * apply eq_typ_equiv in eq3.
+      rewrite eq3; reflexivity.
+    * apply eq_typ_equiv in eq3.
+      rewrite eq3; reflexivity.
++ 
       
