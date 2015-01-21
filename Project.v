@@ -469,6 +469,23 @@ induction trm; intros tp e typ; simpl in typ.
     rewrite beq_nat_eq with (x := n0) (y := n); intuition.
 Qed.
 
+Inductive typ_le (e : env) : typ -> typ -> Prop :=
+| vart_le : forall X1 X2 k1 k2,
+            get_kind e X1 = Some k1 ->
+            get_kind e X2 = Some k2 ->
+            k1 <= k2 ->
+            typ_le e (vart X1) (vart X2)
+| arrow_le : forall t11 t12 t21 t22,
+             typ_le e t11 t21 ->
+             typ_le e t12 t22 ->
+             typ_le e (arrow t11 t12) (arrow t21 t22)
+| fall_le : forall t1 t2 k1 k2,
+            typ_le e t1 t2 ->
+            k1 <= k2 ->
+            typ_le e (fall k1 t1) (fall k2 t2)
+(* I´m not sure about the last case. *)
+.
+
 Theorem completeness_of_kind :
 
 
