@@ -323,25 +323,25 @@ induction tp; intros e k kding; inversion kding.
 Qed. 
 
 (* After Figure 6: Stratified System F Type-Checking Rules *)
-Inductive typing : env -> term -> typ ->  Prop :=
-  | typed_var : forall (e:env) (tp:typ) (x:nat),
-                   (get_typ e x = Some tp :> option typ) ->
-                   wf_env e ->
-                   typing e (var x) tp
-  | typed_abs : forall (e:env),
-                forall (tp1:typ) (trm1:term) (tp_2:typ),
-                typing (v tp1 e) trm1 tp_2 
-                
-                -> typing e (abs tp1 trm1) (arrow tp1 tp_2)
-  | typed_app : forall (e:env)  (tp:typ),
-              forall (trm1 trm2:term) (tp1:typ),
-              typing e trm1 (arrow tp1 tp) -> typing e trm2 tp1 -> typing e (Top.app trm1 trm2) tp 
-  | typed_dept : forall (e:env),
-                  forall (kl :nat) (trm1: term) (tp_1:typ),
-                  typing (v_typ kl e) trm1 tp_1 -> typing e (dept kl trm1) (fall kl tp_1)
-  | typed_applt : forall (e:env) (trm:term) (tp:typ),
-                  forall (trm1:term) (tp2 tp1:typ) (k:nat),
-                  typing e trm1 (fall k tp1) -> kinding e tp2 k -> typing e trm (tsubst tp1 0 tp2)
+Inductive typing (e : env) : term -> typ -> Prop :=
+  | typed_var : forall (tp : typ) (x : nat),
+                get_typ e x = Some tp ->
+                wf_env e ->
+                typing e (var x) tp
+  | typed_abs : forall (tp1 tp2 : typ) (trm1 : term),
+                typing (v tp1 e) trm1 tp2 ->
+                typing e (abs tp1 trm1) (arrow tp1 tp2)
+  | typed_app : forall (tp tp2 : typ) (trm1 trm2 : term),
+                typing e trm1 (arrow tp1 tp) ->
+                typing e trm2 tp1 ->
+                typing e (Top.app trm1 trm2) tp 
+  | typed_dept : forall (kl : nat) (trm1 : term) (tp1 : typ),
+                 typing (v_typ kl e) trm1 tp1 ->
+                 typing e (dept kl trm1) (fall kl tp1)
+  | typed_applt : forall (trm trm1 : term) (tp tp1 tp2 : typ) (k:nat),
+                  typing e trm1 (fall k tp1) ->
+                  kinding e tp2 k ->
+                  typing e trm (tsubst tp1 0 tp2)
 .
 
 (* Actually this function tests for compatibility instead of equality *)
