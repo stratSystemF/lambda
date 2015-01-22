@@ -470,24 +470,50 @@ induction trm; intros tp e typ; simpl in typ.
 Qed.
 
 Inductive typ_le (e : env) : typ -> typ -> Prop :=
-| vart_le : forall X1 X2 k1 k2,
-            get_kind e X1 = Some k1 ->
-            get_kind e X2 = Some k2 ->
-            k1 <= k2 ->
-            typ_le e (vart X1) (vart X2)
+| vart_le : forall X k,
+            get_kind e X = Some k ->
+            typ_le e (vart X) (vart X)
 | arrow_le : forall t11 t12 t21 t22,
              typ_le e t11 t21 ->
              typ_le e t12 t22 ->
              typ_le e (arrow t11 t12) (arrow t21 t22)
 | fall_le : forall t1 t2 k1 k2,
-            typ_le e t1 t2 ->
+            typ_le (v_typ k1 e) t1 t2 ->
             k1 <= k2 ->
             typ_le e (fall k1 t1) (fall k2 t2)
 (* I´m not sure about the last case. *)
 .
 
-Lemma typ_le_refl : forall e t1, wf_env e -> typ_le e t1 t1.
+Lemma typ_le_refl : forall t1 e, wf_typ e t1 -> typ_le e t1 t1.
+induction t1; intros e lhs; simpl in lhs.
++ destruct (get_kind e n) eqn:eq.
+  - apply vart_le with (k := n0); intuition.
+  - apply vart_le with (k := n); intuition.
++ destruct lhs as [wf1 wf2].
+  apply arrow_le; intuition.
++ specialize IHt1 with (e := v_typ n e).
+  apply fall_le; intuition.
+Qed.
+
+Lemma wf_env_all_typ :
+  forall e n tp, wf_env e -> get_typ e n = Some tp -> wf_typ e tp.
 Admitted.
+
+Lemma typing_wf_typ :
+  forall e trm tp, typing e trm tp -> wf_typ e tp.
+Admitted.
+
+Lemma typing_wf_env :
+  forall e trm tp, typing e trm tp -> wf_env e.
+Admitted.
+
+Lemma wf_env_typ :
+  forall e tp, wf_env (v tp e) -> wf_typ e tp.
+Proof.
+intros e tp H.
+simpl in H.
+intuition.
+Qed.
 
 Theorem completeness_of_type :
   forall trm e tp1,
@@ -497,10 +523,31 @@ Proof.
 induction trm; intros e tp1 tping; inversion tping.
 + exists tp1.
   split.
-  - apply typ_le_refl; assumption.
+  - apply typ_le_refl.
+    apply wf_env_all_typ with (n := n); intuition.
   - simpl.
     rewrite <- wf_env_equiv in H1.
     rewrite H1.
     assumption.
-+ 
++ destruct (IHtrm (v t e) tp2 H2) as [tp [IH1 IH2]].
+  inversion tping.
+  exists (arrow t tp2).
+  split.
+  - apply arrow_le.
+    * apply typ_le_refl.
+      apply wf_env_typ.
+      apply typing_wf_env with (trm := trm) (tp := tp).
+      apply soundness_of_type; assumption.
+    * apply typ_le_refl.
+      assert (wf_typ e tp1).
+        apply typing_wf_typ with (trm := abs t trm); assumption.
+        rewrite <- H0 in H7; simpl in H7; intuition.
+  - 
+
+
+
+
+
+
+
 
