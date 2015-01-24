@@ -539,10 +539,6 @@ intuition. (*Just to name quickly, with the names of the lemma*)
 apply (cumulativity t e k); easy.
 Qed.
 
-
-Lemma insert: forall (X : var) (e e' : env), insert_kind X e e' -> wf_env e -> wf_env e'.
-
-
 (* insert_kind X e e' characterizes e' as being the extension of e by a
  * kinding declaration for variable X *)
 Inductive insert_kind : nat -> env -> env -> Prop :=
