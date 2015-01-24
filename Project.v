@@ -469,5 +469,39 @@ Proof.
     rewrite beq_nat_eq with (x := n0) (y := n); intuition.
 Qed.
 
+(* insert_kind X e e' characterizes e' as being the extension of e by a
+ * kinding declaration for variable X *)
+Inductive insert_kind : nat -> env -> env -> Prop :=
+| insert_0 : forall k e,
+                   insert_kind 0 e (v_typ k e)
+| insert_S_v : forall n tp e e',
+               insert_kind (S n) e e' ->
+               insert_kind (S n) (v tp e) (v (tshift tp n) e')
+| insert_S_v_typ : forall n k e e',
+                   insert_kind n e e' ->
+                   insert_kind (S n) e (v_typ k e')
+.
 
-
+Lemma wf_env_typ : forall e tp, wf_env (v tp e) -> wf_typ e tp.
+Proof.
+intros e tp H.
+simpl in H.
+easy.
+Qed.
+(*
+Lemma insert_kind_wf_typ : forall (X : nat) (e e' : env) (tp : typ),
+                             insert_kind X e e' ->
+                             wf_env e ->
+                             wf_env (v (tshift tp X) e').
+Proof.
+*)
+Lemma insert_kind_wf_env : forall (X : nat) (e e' : env),
+                             insert_kind X e e' -> wf_env e -> wf_env e'.
+induction X; intros e e' H wfness.
++ inversion H.
+  easy.
++ destruct e'; inversion H; simpl.
+  - now apply (IHX e).
+  - split.
+    * apply wf_env_typ.
+      apply insert_kind_wf_env.
