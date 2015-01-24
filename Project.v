@@ -469,5 +469,75 @@ Proof.
     rewrite beq_nat_eq with (x := n0) (y := n); intuition.
 Qed.
 
+Lemma randomEquality : forall n l, n = 1 + max (n-1) l.
+Proof.
+  induction n; intro l.
+  simpl.
+Abort.
 
+Lemma cumulativity : forall  t e k , kinding e t k -> forall k' ,(k <= k') -> kinding e t k'.
+(*We could use our soundness of kind, to prove this really quickly*)
+Proof.
+  intros t e k kd.
+  induction kd; intros k' eq.
+  + apply (kinded_var e X k' p).
+      apply H.
+      omega.
+      apply H1.
+  + rewrite <- (max_idempotent).
+    apply (kinded_arrow e tp1 tp2 k' k').
+    apply IHkd1;transitivity (max p q).    
+    apply le_max_l.
+    apply eq.
+    apply IHkd2;transitivity (max p q).
+    apply le_max_r.
+    apply eq.
+  + (*We want to use call kinded_fall on k'-1 so we need to prove k' =  1 +max (k'-1) kl*)
+    (*Administrative intermediate results*)
+
+    (*1*)
+    assert (1+k1 <= k').
+    transitivity (1 + max p k1).
+    simpl.
+    apply le_n_S. (*VIVE L'ENS*)
+    apply le_max_r.
+    apply eq.
+
+
+    (*2*)
+    assert (k1 <= k'-1). 
+    omega.
+
+    (*3*)
+    assert (k' =1 + max (k'-1) k1). 
+    apply (le_antisym).
+    transitivity (1 + max (k' - 1) (k' - 1)).
+    simpl.
+    rewrite (max_idempotent).
+    omega.
+    simpl.
+    apply (le_n_S).
+    rewrite (max_idempotent).
+    apply (le_max_l).
+    rewrite max_l.
+    omega.
+    apply H0.
+    (*End of intermediate results*)
+
+    rewrite H1.
+    apply (kinded_fall e k1 tp1 (k'-1)).
+    apply IHkd.
+    transitivity (max p k1).
+    apply (le_max_l).
+    omega.
+Qed.    
+
+
+Lemma cumulativityExact : forall  t e k k' , kinding e t k -> (k <= k') -> kinding e t k'.
+intuition. (*Just to name quickly, with the names of the lemma*)
+apply (cumulativity t e k); easy.
+Qed.
+
+
+Lemma insert: forall (X : var) (e e' : env), insert_kind X e e' -> wf_env e -> wf_env e'.
 
