@@ -477,11 +477,10 @@ Proof.
 Abort.
 
 Require Import Psatz.
-Lemma cumulativity : forall  t e k , kinding e t k -> forall k' ,(k <= k') -> kinding e t k'.
-(*We could use our soundness of kind, to prove this really quickly*)
+Lemma cumulativity : forall t e k k', kinding e t k -> k <= k' -> kinding e t k'.
 Proof.
-  intros t e k kd.
-  induction kd; intros k' eq.
+  intros t e k k' kd eq.
+  induction kd in k', eq |-*.
   + apply (kinded_var e X k' p).
       apply H.
       omega.
@@ -490,18 +489,12 @@ Proof.
     apply (kinded_arrow e tp1 tp2 k' k').
     apply IHkd1;transitivity (max p q);lia.    
     apply IHkd2;transitivity (max p q);lia.
-  + assert (k' =1 + max (k'-1) k1). 
+  + assert (k' =1 + max (k'-1) k1).
     lia.
     rewrite H.
     apply (kinded_fall e k1 tp1 (k'-1)).
     apply IHkd.
     lia.
-Qed.    
-
-
-Lemma cumulativityExact : forall  t e k k' , kinding e t k -> (k <= k') -> kinding e t k'.
-intuition. (*Just to name quickly, with the names of the lemma*)
-apply (cumulativity t e k); easy.
 Qed.
 
 (* insert_kind X e e' characterizes e' as being the extension of e by a
