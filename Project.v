@@ -503,7 +503,7 @@ Inductive insert_kind : nat -> env -> env -> Prop :=
 | insert_0 : forall k e,
                    insert_kind 0 e (v_typ k e)
 | insert_S_v : forall n tp e e',
-               insert_kind (S n) e e' -> wf_typ e' (tshift tp n) ->
+               insert_kind (S n) e e' -> wf_typ e tp  ->
                insert_kind (S n) (v tp e) (v (tshift tp n) e')
 | insert_S_v_typ : forall n k e e',
                    insert_kind n e e' ->
@@ -522,6 +522,88 @@ Lemma insert_kind_wf_typ : forall (X : nat) (e e' : env) (tp : typ),
                              wf_env (v (tshift tp X) e').
 Proof.
 *)
+
+
+Lemma get_kd : forall e n, get_kind e (S n) <> None -> get_kind e n <> None.    
+Proof.
+induction e.
+*induction n.
++intro.
+ simpl in H.
+ easy.
++easy.  
+* induction n0.
+  -  discriminate.
+  - intuition.
+    simpl in H0.
+    simpl in H.
+    simpl in IHn0.
+    apply (IHe n0).
+    apply H.
+    apply H0.
+* induction n;intuition.
+  - simpl in H0.
+    simpl in H.
+    apply (IHe 0).
+    apply H.
+    apply H0.
+  - simpl in H.
+    simpl in H0.
+    simpl in IHn.
+    apply (IHe (S n)).
+    apply H.
+    apply H0.
+Qed.    
+
+
+Lemma wf_typEtoE' : forall n t e'  e  , wf_typ e t -> insert_kind (S n) e e' -> wf_typ e' (tshift t (n)).
+Proof.
+induction n.
+- intuition.
+  induction e.
+  
+
+
+Lemma wf_typWeak : forall t e n, wf_typ e t -> wf_typ (v_typ n e) t. 
+Proof.
+induction t.    
+-intuition. 
+ simpl in H.
+ simpl.
+ induction n.
+ easy.
+ apply get_kd.
+ apply H.
+- intuition;split; [apply IHt1 | apply IHt2]; apply H.
+- intuition.
+  induction t.
+  induction n1.
+  intuition.
+  apply IHt.
+  simpl H.
+  Abort.
+
+Lemma wf_types : forall t n1 n2  , wf_typ (v_typ n1 empty) t -> wf_typ (v_typ n2 empty) t.
+Proof.
+Abort.
+Lemma tffdset : forall e n, wf_typ empty (fall n (vart 0)) -> wf_typ (v_typ n e) (vart 0).
+Proof.
+induction e.
+* intuition.
+* intuition.
+* intuition.
+Qed.
+
+
+induction e. 
+
+intuition.
+  induction e.
+  simpl in H.
+  simpl.
+  apply (IHt .
+  simpl in H.
+
 
 
 Lemma insert_kind_wf_env : forall (e':env) (X:nat) (e:env),
@@ -546,5 +628,5 @@ induction e'; intros X  e kd wf.
     destruct wf.
     apply H7.
 Qed.
-    
+
     
