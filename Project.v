@@ -173,7 +173,6 @@ Fixpoint wf_typ (e : env) (T : typ) {struct T} : Prop :=
     | fall k T2   => wf_typ (v_typ k e) T2 
   end.
 
-
 Local Open Scope bool_scope.
 
 Fixpoint wf_typ_bool (e : env) (T : typ) {struct T} : bool :=
@@ -515,13 +514,6 @@ intros e tp H.
 simpl in H.
 easy.
 Qed.
-(*
-Lemma insert_kind_wf_typ : forall (X : nat) (e e' : env) (tp : typ),
-                             insert_kind X e e' ->
-                             wf_env e ->
-                             wf_env (v (tshift tp X) e').
-Proof.
-*)
 
 
 Lemma get_kd : forall e n, get_kind e (S n) <> None -> get_kind e n <> None.    
@@ -556,53 +548,64 @@ induction e.
 Qed.    
 
 
-Lemma wf_typEtoE' : forall n t e'  e  , wf_typ e t -> insert_kind (S n) e e' -> wf_typ e' (tshift t (n)).
-Proof.
-induction n.
-- intuition.
-  induction e.
-  
-
-
-Lemma wf_typWeak : forall t e n, wf_typ e t -> wf_typ (v_typ n e) t. 
-Proof.
-induction t.    
--intuition. 
- simpl in H.
- simpl.
- induction n.
- easy.
- apply get_kd.
- apply H.
-- intuition;split; [apply IHt1 | apply IHt2]; apply H.
-- intuition.
-  induction t.
-  induction n1.
-  intuition.
-  apply IHt.
-  simpl H.
-  Abort.
-
-Lemma wf_types : forall t n1 n2  , wf_typ (v_typ n1 empty) t -> wf_typ (v_typ n2 empty) t.
-Proof.
-Abort.
-Lemma tffdset : forall e n, wf_typ empty (fall n (vart 0)) -> wf_typ (v_typ n e) (vart 0).
+Lemma get_kdd : forall e n, get_kind e n = None -> get_kind e (S n) = None.    
 Proof.
 induction e.
-* intuition.
-* intuition.
+*induction n.
+   + intro.
+     simpl in H.
+     easy.
+   +easy.  
+* intuition. 
+  simpl.
+  simpl in H.
+  destruct n0.
+  discriminate.
+  apply IHe.
+  apply H.
 * intuition.
 Qed.
 
 
-induction e. 
+Lemma ttf : forall t e e', (forall X,get_kind e' X = None -> get_kind e X = None) ->  wf_typ e t -> wf_typ e' t.
+Proof.
+induction t;simpl;auto. 
+*intros e e' H (H1, H2) ; split.
+  + apply (IHt1 e _ ); [apply H | apply H1].
+  + apply (IHt2 e _); [apply H| apply H2].
+* intros e e' H H1.
+  apply (IHt (v_typ n e) _).
+  induction X; [ easy | simpl; apply H].
+  apply H1 .
+Qed.
 
+Lemma wf_typWeak : forall t e n, wf_typ e t -> wf_typ (v_typ n e) t. 
+Proof.
+intuition.
+apply (ttf t e (v_typ n e)).
+induction X.  
+intro.
+simpl in H0.
+discriminate.
+simpl.
+intro.
+simpl.
+apply get_kdd.
+apply H0.
+apply H.
+Qed.
+
+
+Lemma wf_typEtoE' : forall t e' e n  , wf_typ e t -> insert_kind (S n) e e' -> wf_typ e' (tshift t (n)).
+Proof.
+induction t.
+- intuition.
+  simpl H0.
+  simpl.
+  
 intuition.
   induction e.
-  simpl in H.
-  simpl.
-  apply (IHt .
-  simpl in H.
+  Abort.
 
 
 
