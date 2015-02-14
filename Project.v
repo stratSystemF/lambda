@@ -1,3 +1,4 @@
+
 Require Import Arith.
 
 Require Import Le.
@@ -502,11 +503,12 @@ Inductive insert_kind : nat -> env -> env -> Prop :=
 | insert_0 : forall k e,
                    insert_kind 0 e (v_typ k e)
 | insert_S_v : forall n tp e e',
-               insert_kind (S n) e e' -> wf_typ e tp  ->
-               insert_kind (S n) (v tp e) (v (tshift tp n) e')
+               insert_kind (S n) e e'  ->
+               insert_kind (S n) (v tp e) (v (tshift tp (S n)) e')
 | insert_S_v_typ : forall n k e e',
                    insert_kind n e e' ->
-                   insert_kind (S n) e (v_typ k e').
+                   insert_kind (S n) (v_typ k e) (v_typ k e').
+(*ETUDIER SI CE b_typ est important*)
 
 Lemma wf_env_typ : forall e tp, wf_env (v tp e) -> wf_typ e tp.
 Proof.
@@ -579,57 +581,19 @@ induction t;simpl;auto.
   apply H1 .
 Qed.
 
-Lemma wf_typWeak : forall t e n, wf_typ e t -> wf_typ (v_typ n e) t. 
-Proof.
-intuition.
-apply (ttf t e (v_typ n e)).
-induction X.  
-intro.
-simpl in H0.
-discriminate.
-simpl.
-intro.
-simpl.
-apply get_kdd.
-apply H0.
-apply H.
+Lemma insert_kind_wf_typ T : forall n e e', insert_kind n e e' -> wf_typ e T -> wf_typ e' (tshift T n).
+induction T;
+intros n' e e' a b.
+- admit. (*todo*)
+- simpl in *. destruct b.  eauto.
+- simpl in *. apply (IHT (S n') (v_typ n e) _ (insert_S_v_typ _ _ _ _ a) b).
 Qed.
 
 
-Lemma wf_typEtoE' : forall t e' e n  , wf_typ e t -> insert_kind (S n) e e' -> wf_typ e' (tshift t (n)).
-Proof.
-induction t.
-- intuition.
-  simpl H0.
-  simpl.
-  
-intuition.
-  induction e.
-  Abort.
-
-
-
-Lemma insert_kind_wf_env : forall (e':env) (X:nat) (e:env),
+Lemma insert_kind_wf_env : forall (X:nat) (e:env) (e':env),
                              insert_kind X e e' -> wf_env e -> wf_env e'.
-induction e'; intros X  e kd wf.
-- easy.
-- induction e;inversion kd.
-  + easy.
-  + apply (IHe' n0 empty); easy.
-  + easy.
-  + apply (IHe' n1 (v_typ n0 e)); easy.
-  + easy.
-  + apply (IHe' n0 (v t e)); easy.
-- induction e; inversion kd. 
-  * simpl.
-    split.
-    apply H5.
-    apply (IHe' X e).
-    rewrite <- H1.
-    apply H3.
-    simpl in wf.
-    destruct wf.
-    apply H7.
+induction 1; simpl; auto.
+intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
 Qed.
 
-    
+
