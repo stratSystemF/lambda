@@ -508,83 +508,44 @@ Inductive insert_kind : nat -> env -> env -> Prop :=
 | insert_S_v_typ : forall n k e e',
                    insert_kind n e e' ->
                    insert_kind (S n) (v_typ k e) (v_typ k e').
-(*ETUDIER SI CE b_typ est important*)
 
-Lemma wf_env_typ : forall e tp, wf_env (v tp e) -> wf_typ e tp.
-Proof.
-intros e tp H.
-simpl in H.
-easy.
+
+Lemma insert_kind_wf_get_kind : forall n e e' l, insert_kind n e e' -> get_kind e l = get_kind e' (if le_gt_dec n l then S l else l).
+intuition.
+revert l. (*VERY USEFULL TECHNIQUE TO FLIP THE FORALL!*)
+induction H.
+-simpl in *.
+ destruct l.
+ +eauto.
+ +eauto.
+- eauto.
+- intuition. 
+  destruct l.
+  easy.
+  specialize (IHinsert_kind l).
+  simpl get_kind at 1.
+  rewrite IHinsert_kind.
+  destruct (le_gt_dec n l); destruct (le_gt_dec (S n) (S l)). (*For now I can't find a better way to do that*)  
+  + eauto.
+  + assert( l<l).
+    omega.
+    apply lt_irrefl in H0.
+    contradiction H0.
+  + assert( n > n).
+    omega.
+    apply gt_irrefl in H0. 
+    contradiction H0.
+  + eauto.
 Qed.
 
-
-Lemma get_kd : forall e n, get_kind e (S n) <> None -> get_kind e n <> None.    
-Proof.
-induction e.
-*induction n.
-+intro.
- simpl in H.
- easy.
-+easy.  
-* induction n0.
-  -  discriminate.
-  - intuition.
-    simpl in H0.
-    simpl in H.
-    simpl in IHn0.
-    apply (IHe n0).
-    apply H.
-    apply H0.
-* induction n;intuition.
-  - simpl in H0.
-    simpl in H.
-    apply (IHe 0).
-    apply H.
-    apply H0.
-  - simpl in H.
-    simpl in H0.
-    simpl in IHn.
-    apply (IHe (S n)).
-    apply H.
-    apply H0.
-Qed.    
-
-
-Lemma get_kdd : forall e n, get_kind e n = None -> get_kind e (S n) = None.    
-Proof.
-induction e.
-*induction n.
-   + intro.
-     simpl in H.
-     easy.
-   +easy.  
-* intuition. 
-  simpl.
-  simpl in H.
-  destruct n0.
-  discriminate.
-  apply IHe.
-  apply H.
-* intuition.
-Qed.
-
-
-Lemma ttf : forall t e e', (forall X,get_kind e' X = None -> get_kind e X = None) ->  wf_typ e t -> wf_typ e' t.
-Proof.
-induction t;simpl;auto. 
-*intros e e' H (H1, H2) ; split.
-  + apply (IHt1 e _ ); [apply H | apply H1].
-  + apply (IHt2 e _); [apply H| apply H2].
-* intros e e' H H1.
-  apply (IHt (v_typ n e) _).
-  induction X; [ easy | simpl; apply H].
-  apply H1 .
-Qed.
 
 Lemma insert_kind_wf_typ T : forall n e e', insert_kind n e e' -> wf_typ e T -> wf_typ e' (tshift T n).
 induction T;
 intros n' e e' a b.
-- admit. (*todo*)
+- simpl in *. 
+  rewrite <-(insert_kind_wf_get_kind n' e e' n).
+  eauto.
+  eauto.
 - simpl in *. destruct b.  eauto.
 - simpl in *. apply (IHT (S n') (v_typ n e) _ (insert_S_v_typ _ _ _ _ a) b).
 Qed.
@@ -592,7 +553,7 @@ Qed.
 
 Lemma insert_kind_wf_env : forall (X:nat) (e:env) (e':env),
                              insert_kind X e e' -> wf_env e -> wf_env e'.
-induction 1; simpl; auto.
+induction 1; simpl; auto. (*Induction sur insert_kind*)
 intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
 Qed.
 
