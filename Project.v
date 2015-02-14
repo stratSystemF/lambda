@@ -557,4 +557,11 @@ induction 1; simpl; auto. (*Induction sur insert_kind*)
 intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
 Qed.
 
+Inductive env_subst : nat -> typ -> env -> env -> Prop := 
+| subst_Svtyp: forall e e' n k T, env_subst n T e e' -> env_subst (S n) T (v_typ k e) (v_typ k e') (*under the constructors*)   
+| subst_SV: forall e e' n T tp, env_subst n T e e' -> env_subst n T (v tp e) (v (tsubst tp n T) e') (*Substitute from the end to the beginning*)
+| substv: forall e e' k T, env_subst 0 T e e' -> env_subst 0 T (v_typ k e) e'. (*We need to substitue in e*)
+ 
+
+
 
