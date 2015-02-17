@@ -12,6 +12,10 @@ Require Import Bool.
 Require Import Omega.
 Local Open Scope nat_scope.
 
+(* 1.2 DEFINITIONS *)
+
+(* Question 1 : Types *)
+
 Inductive typ := 
 | vart : nat -> typ
 (* The latter nat is the de Brujin index of the type variable. *)
@@ -36,7 +40,6 @@ Fixpoint tshift (t:typ) (v:nat) : typ :=
    | fall rank sP  => fall rank (tshift sP (1 + v)) 
    end.
 
-(*I have to write an example about that*)
 (* The following function substitutes the type variable number v by newt inside t.
  * It is assumed that v is removed from the environment stack
  * and, as always, it is assumed that v does not appear in newt.
@@ -55,6 +58,7 @@ Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ :=
   | fall rank sp => fall rank (tsubst sp (1 + v) (tshift newt 0)) 
   end.
 
+(* Question 2 : Terms *)
 
 Inductive term :=
 | var : nat -> term
@@ -124,7 +128,8 @@ Fixpoint subst (trm:term) (v:nat) (newt:term) :=
   | applt trm tp => applt (subst trm v newt) tp
   end.
 
-(* Environments *)
+(* Question 3 : Environments *)
+
 Require Import List.
 Import ListNotations.
 
@@ -166,7 +171,9 @@ Fixpoint get_kind e (i:nat) :=
     | v t tl => get_kind tl i
   end.
 
-(*Comes from subject*)
+(* Question 4 : kinding and typing predicates *)
+(* Question 5 : kind and type inference *)
+
 Fixpoint wf_typ (e : env) (T : typ) {struct T} : Prop :=
   match T with
     | vart X      => get_kind e X <> None
@@ -217,6 +224,7 @@ Proof.
     intuition; apply wf_typ_equiv; assumption.
 Qed.
 
+(* Kinding predicate *)
 (* After Figure 5: Stratified System F Kinding Rules *)
 Inductive kinding (e : env) : typ -> nat -> Prop :=
 | kinded_var : forall X k p,
@@ -233,6 +241,7 @@ Inductive kinding (e : env) : typ -> nat -> Prop :=
                   kinding e (fall k1 tp1) (1 + max p k1)
 .
 
+(* Kind inference *)
 (* This function computes the minimal kind for a type term *)
 Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
@@ -273,6 +282,8 @@ Proof.
       apply IHtp; reflexivity.
 Qed.
 
+(* This result was not required by the subject.
+ * But at first we had understood it was, so here it is *)
 Theorem completeness_of_kind :
   forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
 Proof.
@@ -308,6 +319,7 @@ Proof.
                  reflexivity.
 Qed. 
 
+(* Typing predicate *)
 (* After Figure 6: Stratified System F Type-Checking Rules *)
 Inductive typing (e : env) : term -> typ -> Prop :=
 | typed_var : forall (tp : typ) (x : nat),
@@ -332,6 +344,8 @@ Inductive typing (e : env) : term -> typ -> Prop :=
 
 (* eq_typ is the decidable equality of types
    this is a strict inductive equality *)
+(* We now know that there are cleaner ways of doing that.
+ * We will rewrite if we have enough time. *)
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
     | (vart x , vart y) => beq_nat x y
@@ -375,6 +389,7 @@ Proof.
     reflexivity.
 Qed.
 
+(* Type inference *)
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
     | var x => if wf_env_bool e then get_typ e x else None
@@ -469,17 +484,15 @@ Proof.
     rewrite beq_nat_eq with (x := n0) (y := n); intuition.
 Qed.
 
+(* 1.3 BASIC METATHEORY *)
 
-Lemma randomEquality : forall n l, n = 1 + max (n-1) l.
-Proof.
-  induction n; intro l.
-  simpl.
-Abort.
+(* Lemma 1.1 Cumulativity *)
 
 Require Import Psatz.
-Lemma cumulativity : forall t e k k', kinding e t k -> k <= k' -> kinding e t k'.
+Lemma cumulativity :
+  forall e t k k', kinding e t k -> k <= k' -> kinding e t k'.
 Proof.
-  intros t e k k' kd eq.
+  intros e t k k' kd eq.
   induction kd in k', eq |-*.
   + apply (kinded_var e X k' p).
       apply H.
@@ -497,6 +510,10 @@ Proof.
     lia.
 Qed.
 
+(* 1.3.1 TYPE SUBSTITUTION *)
+
+(* Question 1 *)
+
 (* insert_kind X e e' characterizes e' as being the extension of e by a
  * kinding declaration for variable X *)
 Inductive insert_kind : nat -> env -> env -> Prop :=
@@ -509,19 +526,19 @@ Inductive insert_kind : nat -> env -> env -> Prop :=
                    insert_kind n e e' ->
                    insert_kind (S n) (v_typ k e) (v_typ k e').
 
+(* Question 2 *)
 
-Lemma insert_kind_wf_get_kind : forall n e e' l, insert_kind n e e' -> get_kind e l = get_kind e' (if le_gt_dec n l then S l else l).
-intuition.
-revert l. (*VERY USEFULL TECHNIQUE TO FLIP THE FORALL!*)
+Lemma invariant_by_weakening_get_kind :
+  forall n e e' l,
+  insert_kind n e e' ->
+  get_kind e l = get_kind e' (if le_gt_dec n l then S l else l).
+intros; revert l.
 induction H.
--simpl in *.
- destruct l.
- +eauto.
- +eauto.
+- simpl in *.
+  destruct l; eauto.
 - eauto.
 - intuition. 
-  destruct l.
-  easy.
+  destruct l; trivial.
   specialize (IHinsert_kind l).
   simpl get_kind at 1.
   rewrite IHinsert_kind.
@@ -538,29 +555,50 @@ induction H.
   + eauto.
 Qed.
 
-
-Lemma insert_kind_wf_typ T : forall n e e', insert_kind n e e' -> wf_typ e T -> wf_typ e' (tshift T n).
+(* Well-formedness is invariant by weakening *)
+Lemma invariant_by_weakening_wf_typ :
+  forall T n e e',
+  insert_kind n e e' -> wf_typ e T -> wf_typ e' (tshift T n).
 induction T;
 intros n' e e' a b.
 - simpl in *. 
-  rewrite <-(insert_kind_wf_get_kind n' e e' n).
+  rewrite <-(invariant_by_weakening_get_kind n' e e' n).
   eauto.
   eauto.
 - simpl in *. destruct b.  eauto.
 - simpl in *. apply (IHT (S n') (v_typ n e) _ (insert_S_v_typ _ _ _ _ a) b).
 Qed.
 
-
-Lemma insert_kind_wf_env : forall (X:nat) (e:env) (e':env),
-                             insert_kind X e e' -> wf_env e -> wf_env e'.
-induction 1; simpl; auto. (*Induction sur insert_kind*)
-intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
+Lemma insert_kind_wf_env :
+  forall (X:nat) (e:env) (e':env),
+  insert_kind X e e' -> wf_env e -> wf_env e'.
+induction 1; simpl; auto. (*Induction on insert_kind*)
+intros [T E];split; [apply (invariant_by_weakening_wf_typ _ _ e _); eauto | eauto].
 Qed.
 
+(* Kinding is invariant by weakening *)
+
+(* TODO *)
+
+(* Typing is invariant by weakening *)
+
+(* TODO *)
+
+(* Question 3 *)
+
 Inductive env_subst : nat -> typ -> env -> env -> Prop := 
-| subst_Svtyp: forall e e' n k T, env_subst n T e e' -> env_subst (S n) T (v_typ k e) (v_typ k e') (*under the constructors*)   
-| subst_SV: forall e e' n T tp, env_subst n T e e' -> env_subst n T (v tp e) (v (tsubst tp n T) e') (*Substitute from the end to the beginning*)
-| substv: forall e e' k T, env_subst 0 T e e' -> env_subst 0 T (v_typ k e) e'. (*We need to substitue in e*)
+| subst_Svtyp: (*under the constructors*)
+  forall e e' n k T,
+  env_subst n T e e' ->
+  env_subst (S n) T (v_typ k e) (v_typ k e')   
+| subst_SV: (*Substitute from the end to the beginning*)
+  forall e e' n T tp,
+  env_subst n T e e' ->
+  env_subst n T (v tp e) (v (tsubst tp n T) e')
+| substv: (*We need to substitue in e*)
+  forall e e' k T,
+  env_subst 0 T e e' ->
+  env_subst 0 T (v_typ k e) e'.
  
 
 
