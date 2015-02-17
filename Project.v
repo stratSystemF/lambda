@@ -492,19 +492,17 @@ Require Import Psatz.
 Lemma cumulativity :
   forall e t k k', kinding e t k -> k <= k' -> kinding e t k'.
 Proof.
-  intros e t k k' kd eq.
-  induction kd in k', eq |-*.
-  + apply (kinded_var e X k' p).
-      apply H.
-      omega.
-      apply H1.
-  + rewrite <- (max_idempotent).
-    apply (kinded_arrow e tp1 tp2 k' k').
-    apply IHkd1;transitivity (max p q);lia.    
-    apply IHkd2;transitivity (max p q);lia.
-  + assert (k' =1 + max (k'-1) k1).
+  intros e t k k' kd; revert k'.
+  induction kd; intros.
+  + apply (kinded_var e X k' p); trivial.
+    omega.
+  + rewrite <- max_idempotent.
+    apply (kinded_arrow e tp1 tp2 k' k');
+    (apply IHkd1 || apply IHkd2);
     lia.
-    rewrite H.
+  + assert (k' = 1 + max (k'-1) k1) as eq.
+    lia.
+    rewrite eq.
     apply (kinded_fall e k1 tp1 (k'-1)).
     apply IHkd.
     lia.
