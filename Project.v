@@ -95,11 +95,11 @@ Fixpoint shift_typ (t:term) (v:nat) : term :=
    | dept i trm => dept i (shift_typ trm (1 + v)) 
    | applt trm tp =>  applt (shift_typ trm v) tp
    end.
-
 (* The following function substitutes the type variable number v by newt inside t.
  * It is assumed that v is removed from the environment stack
  * and, as always, it is assumed that v does not appear in newt.
  *)
+(*TODO This functions seems reversed now*)
 Fixpoint subst_typ (trm:term) (v:nat) (newt:typ) := 
   match trm with
   | var l => var l 
@@ -636,9 +636,35 @@ Inductive env_subst : nat -> typ -> env -> env -> Prop :=
   forall e e' k T,
   env_subst 0 T e e' ->
   env_subst 0 T (v_typ k e) e'.
- 
 
 
 
 
 (*Partie 2*)
+
+(*A relation on (term x term) is term -> term -> Prop. Let define 
+our reduction relation with an inductive predicate.*)
+
+(*For now we don't care about well-formedness, it will come
+later*)
+(*Parallel reduction. I didn't find a better, automatic way. Nothin about congruence relations
+in the lib. It's intuition driven, so to check*)
+Inductive oneStep : term -> term -> Prop :=
+| redTyp : forall phi n t, oneStep (applt (dept n t) phi) (subst_typ t 0 phi)
+| redTerm : forall (phi:typ) t (t':term), oneStep (Top.app (abs phi t) t') (subst t' 0  t)
+| redUnderAbs : forall phi t t', oneStep t t' -> oneStep (abs phi t) (abs phi t')
+| redUnderAbst : forall k t t', oneStep t t' -> oneStep (dept k t) (dept k t')
+| parallelApp : forall t t' s s', oneStep t t' -> oneStep s s' -> oneStep (Top.app t s) (Top.app t' s')
+| redUnderAppt : forall t t' phi, oneStep t t' -> oneStep (applt t phi) (applt t' phi)
+| id : forall t, oneStep t t.
+
+(*TODO Fix all the problems of namespaces! That's a pain*) 
+(* Inductive term := *)
+(* | var : nat -> term *)
+(* (* The latter nat is the de Brujin index of the term variable. *) *)
+(* | abs : typ -> term -> term *)
+(* (* The latter typ is the type of the term which is abstracted. *) *)
+(* | app : term -> term -> term *)
+(* | dept : nat -> term -> term *)
+(* (* The latter nat is the kind of the type which is abstracted. *) *)
+(* | applt: term -> typ -> term. *)
