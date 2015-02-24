@@ -514,11 +514,11 @@ Qed.
 
 (* Question 1 *)
 
-(* insert_kind X e e' characterizes e' as being the extension of e by a
- * kinding declaration for variable X *)
+(* insert_kind X e e' characterizes e' as being the extension of
+ * e by a kinding declaration for variable X *)
 Inductive insert_kind : nat -> env -> env -> Prop :=
 | insert_0 : forall k e,
-                   insert_kind 0 e (v_typ k e)
+             insert_kind 0 e (v_typ k e)
 | insert_S_v : forall n tp e e',
                insert_kind (S n) e e'  ->
                insert_kind (S n) (v tp e) (v (tshift tp (S n)) e')
@@ -528,7 +528,7 @@ Inductive insert_kind : nat -> env -> env -> Prop :=
 
 (* Question 2 *)
 
-Lemma invariant_by_weakening_get_kind :
+Lemma insert_kind_get_kind :
   forall n e e' l,
   insert_kind n e e' ->
   get_kind e l = get_kind e' (if le_gt_dec n l then S l else l).
@@ -556,13 +556,13 @@ induction H.
 Qed.
 
 (* Well-formedness is invariant by weakening *)
-Lemma invariant_by_weakening_wf_typ :
+Lemma insert_kind_wf_typ :
   forall T n e e',
   insert_kind n e e' -> wf_typ e T -> wf_typ e' (tshift T n).
 induction T;
 intros n' e e' a b.
 - simpl in *. 
-  rewrite <-(invariant_by_weakening_get_kind n' e e' n).
+  rewrite <-(insert_kind_get_kind n' e e' n).
   eauto.
   eauto.
 - simpl in *. destruct b.  eauto.
@@ -570,19 +570,56 @@ intros n' e e' a b.
 Qed.
 
 Lemma insert_kind_wf_env :
-  forall (X:nat) (e:env) (e':env),
+  forall (X : nat) (e e' : env),
   insert_kind X e e' -> wf_env e -> wf_env e'.
 induction 1; simpl; auto. (*Induction on insert_kind*)
-intros [T E];split; [apply (invariant_by_weakening_wf_typ _ _ e _); eauto | eauto].
+intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
 Qed.
 
 (* Kinding is invariant by weakening *)
 
-(* TODO *)
+Lemma insert_kind_kinding :
+  forall n e e' T k,
+  insert_kind n e e' ->
+  (kinding e T k <->
+   kinding e' (tshift T n) k).
+intuition.
+induction n.
+(* What a mess!
+induction T.
++ inversion H0.
+  apply kinded_var with (p := p); trivial.
+  - rewrite <- H2.
+    symmetry.
+    apply insert_kind_get_kind.
+    assumption.
+  - eapply insert_kind_wf_env.
+    eassumption.
+    assumption.
++ simpl.
+  rewrite <- max_idempotent.
+  apply kinded_arrow.
+  - apply IHT1.
+    inversion H0.
+    apply cumulativity with (k := p); trivial; lia.
+  - apply IHT2.
+    inversion H0.
+    apply cumulativity with (k := q); trivial; lia.
++ simpl.
+  destruct k.
+  - apply insert_0.
+  - assert (k = 1 + max (k-1) (k-1)) as eq.
+    lia.
+    rewrite eq.
+    apply kinded_fall.
+
+*)
+Abort.
 
 (* Typing is invariant by weakening *)
 
-(* TODO *)
+(*Lemma insert_kind_typing :
+Abort.*)
 
 (* Question 3 *)
 
