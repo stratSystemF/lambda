@@ -17,6 +17,8 @@ Inductive typ :=
 (* The latter nat is the de Brujin index of the type variable. *)
 | arrow : typ -> typ -> typ
 | fall : nat -> typ -> typ.
+
+
 (* The latter nat is the kind of the type which is abstracted. *)
 
 (* The environment is a stack of values *
@@ -565,3 +567,5 @@ Inductive env_subst : nat -> typ -> env -> env -> Prop :=
 
 
 
+
+(*Partie 2*)
