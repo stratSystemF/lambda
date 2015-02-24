@@ -532,6 +532,7 @@ Lemma insert_kind_get_kind :
   forall n e e' l,
   insert_kind n e e' ->
   get_kind e l = get_kind e' (if le_gt_dec n l then S l else l).
+Proof.
 intros; revert l.
 induction H.
 - simpl in *.
@@ -559,6 +560,7 @@ Qed.
 Lemma insert_kind_wf_typ :
   forall T n e e',
   insert_kind n e e' -> wf_typ e T -> wf_typ e' (tshift T n).
+Proof.
 induction T;
 intros n' e e' a b.
 - simpl in *. 
@@ -572,6 +574,7 @@ Qed.
 Lemma insert_kind_wf_env :
   forall (X : nat) (e e' : env),
   insert_kind X e e' -> wf_env e -> wf_env e'.
+Proof.
 induction 1; simpl; auto. (*Induction on insert_kind*)
 intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
 Qed.
@@ -579,17 +582,15 @@ Qed.
 (* Kinding is invariant by weakening *)
 
 Lemma insert_kind_kinding :
-  forall n e e' T k,
-  insert_kind n e e' ->
-  (kinding e T k <->
-   kinding e' (tshift T n) k).
-intuition.
-induction n.
-(* What a mess!
-induction T.
-+ inversion H0.
+  forall T X e e' k,
+  insert_kind X e e' ->
+  kinding e T k ->
+  kinding e' (tshift T X) k.
+Proof.
+induction T; intros X e e' k H1 H2.
++ inversion H2.
   apply kinded_var with (p := p); trivial.
-  - rewrite <- H2.
+  - rewrite <- H0.
     symmetry.
     apply insert_kind_get_kind.
     assumption.
@@ -599,26 +600,23 @@ induction T.
 + simpl.
   rewrite <- max_idempotent.
   apply kinded_arrow.
-  - apply IHT1.
-    inversion H0.
+  - apply IHT1 with (e := e); trivial.
+    inversion H2.
     apply cumulativity with (k := p); trivial; lia.
-  - apply IHT2.
-    inversion H0.
+  - apply IHT2 with (e := e); trivial.
+    inversion H2.
     apply cumulativity with (k := q); trivial; lia.
 + simpl.
-  destruct k.
-  - apply insert_0.
-  - assert (k = 1 + max (k-1) (k-1)) as eq.
-    lia.
-    rewrite eq.
-    apply kinded_fall.
-
-*)
-Abort.
+  inversion H2.
+  apply kinded_fall.
+  apply IHT with (e := v_typ n e); trivial.
+  now apply insert_S_v_typ.
+Qed.
 
 (* Typing is invariant by weakening *)
 
 (*Lemma insert_kind_typing :
+Proof.
 Abort.*)
 
 (* Question 3 *)
