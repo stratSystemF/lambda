@@ -757,6 +757,23 @@ apply congruAppL.
 apply H.
 Qed.
 
+(*Question 3*)
+(*System F is type erasing*)
+Inductive normal : term -> Prop :=
+| directlyNeutral: forall t, neutral t -> normal t
+| absNorm :  forall v phi, normal v -> normal (abs phi v) 
+| absTNorm : forall v k, normal v -> normal (dept k v) 
+with neutral : term -> Prop :=
+| nV: forall n, neutral (var n)
+| nApplt: forall phi t, neutral t -> neutral (applt t phi)
+| nApp: forall t t', neutral t -> normal t' -> neutral (Top.app t t').
+
+
+
+(*Un terme neutre est un temre qui n'est pas une abstraction.*)
+
+
+
 (*TODO Fix all the problems of namespaces! That's a pain*) 
 (* Inductive term := *)
 (* | var : nat -> term *)
@@ -767,6 +784,7 @@ Qed.
 (* | dept : nat -> term -> term *)
 (* (* The latter nat is the kind of the type which is abstracted. *) *)
 (* | applt: term -> typ -> term. *)
+
 
 
 
