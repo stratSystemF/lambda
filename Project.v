@@ -89,11 +89,11 @@ Fixpoint shift (t:term) (v:nat) : term :=
  *)
 Fixpoint shift_typ (t:term) (v:nat) : term :=
    match t with
-   | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
-   | abs tp trm  => abs tp (shift_typ trm v) 
+   | var i   => var i
+   | abs tp trm  => abs (tshift tp v) (shift_typ trm v) 
    | app trm1 trm2  => app (shift_typ trm1 v) (shift_typ trm2 v)
    | dept i trm => dept i (shift_typ trm (1 + v)) 
-   | applt trm tp =>  applt (shift_typ trm v) tp
+   | applt trm tp =>  applt (shift_typ trm v) (tshift tp v)
    end.
 (* The following function substitutes the type variable number v by newt inside t.
  * It is assumed that v is removed from the environment stack
@@ -615,9 +615,40 @@ Qed.
 
 (* Typing is invariant by weakening *)
 
-(*Lemma insert_kind_typing :
+Lemma insert_kind_get_typ :
+  forall tp X y e e',
+  insert_kind X e e' ->
+  get_typ e y = Some tp ->
+  get_typ e' y = Some (tshift tp X).
 Proof.
-Abort.*)
+(*induction X.
++ intros tp y e e' H1 H2.
+  inversion H1.
+  simpl.
+  Print tshift.
+*)
+induction tp; intros X y e e' H1 H2.
++ inversion H1.
+  - simpl.
+
+Abort.
+
+Lemma insert_kind_typing :
+  forall trm tp X e e',
+  insert_kind X e e' ->
+  typing e trm tp ->
+  typing e' (shift_typ trm X) (tshift tp X).
+Proof.
+induction trm; intros tp X e e' H1 H2.
++ inversion H2.
+  apply typed_var.
+  - admit.
+  - now apply insert_kind_wf_env with (X := X) (e := e).
++ 
+    
+
+
+Abort.
 
 (* Question 3 *)
 
