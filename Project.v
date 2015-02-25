@@ -152,7 +152,10 @@ Inductive env :=
 Fixpoint get_typ e (i:nat) :=
   match e with
     | empty => None               
-    | v_typ k tl => get_typ tl i
+    | v_typ k tl => match get_typ tl i with
+                    | None => None
+                    | Some tp => Some (tshift tp 0)
+                    end
     | v t tl => match i with
                   | 0 => Some t
                   | S x => get_typ tl x
@@ -616,20 +619,43 @@ Qed.
 (* Typing is invariant by weakening *)
 
 Lemma insert_kind_get_typ :
-  forall tp X y e e',
+  forall X e e' tp y,
   insert_kind X e e' ->
   get_typ e y = Some tp ->
   get_typ e' y = Some (tshift tp X).
 Proof.
-(*induction X.
-+ intros tp y e e' H1 H2.
+induction X.
++ intros e e' tp y H1 H2.
   inversion H1.
   simpl.
-  Print tshift.
-*)
-induction tp; intros X y e e' H1 H2.
-+ inversion H1.
+  destruct (get_typ e y); now inversion H2.
++ induction e; induction e'; intros tp y H1 H2; inversion H1.
   - simpl.
+    destruct (get_typ e' y).
+    rewrite <- IHe' with (y := y).
+    erewrite IHX.
+    inversion H1.
+      apply insert_S_v_typ.
+
+(*induction y.
+  - intros tp e e' H1 H2.
+    inversion H1.
+    simpl.
+    inversion H2.
+*)
+
+  induction tp; intros y e e' H1 H2.
+  - destruct e; try discriminate.
+    simpl in H2.
+    destruct (get_typ e y); try discriminate.
+    inversion H2.
+    inversion H1.
+    simpl.
+    Print get_typ.
+    simpl.
+
+
+
 
 Abort.
 
