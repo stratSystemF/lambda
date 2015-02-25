@@ -152,7 +152,10 @@ Inductive env :=
 Fixpoint get_typ e (i:nat) :=
   match e with
     | empty => None               
-    | v_typ k tl => get_typ tl i
+    | v_typ k tl => match get_typ tl i with
+                    | None => None
+                    | Some tp => Some (tshift tp 0)
+                    end
     | v t tl => match i with
                   | 0 => Some t
                   | S x => get_typ tl x
@@ -616,20 +619,110 @@ Qed.
 (* Typing is invariant by weakening *)
 
 Lemma insert_kind_get_typ :
-  forall tp X y e e',
+  forall y e e' X tp,
   insert_kind X e e' ->
   get_typ e y = Some tp ->
   get_typ e' y = Some (tshift tp X).
 Proof.
-(*induction X.
-+ intros tp y e e' H1 H2.
+induction y.
++ induction 1.
+  - simpl.
+    intros H1.
+    destruct (get_typ e 0); try discriminate.
+    now inversion H1.
+  - simpl.
+    intros H1.
+    destruct (get_typ e (S n));
+    now inversion H1.
+  - destruct e; destruct e'; try discriminate.
+    simpl.
+    intros H1.
+    destruct (get_typ e 0) eqn:eq1; try discriminate.
+    destruct (get_typ e' 0) eqn:eq2.
+    * 
+      inversion H.
+      inversion eq1.
+      
+      
+
+
+
+  
+induction 1.
++ simpl.
+  destruct (get_typ e y); try discriminate.
+  intros H1; now inversion H1.
++ intros H1.
+  induction y.
+  - simpl.
+    now inversion H1.
+  - apply IHy.
+
+induction e; induction e'; try (intros X tp y H1 H2; inversion H1; now inversion H2).
+(*+ intros X tp y H1 H2.
+  simpl.
+  destruct (get_typ e y); now inversion H2.*)
++ intros X tp y H1 H2.
+  simpl.
+  destruct (get_typ e' y) eqn:eq.
+  - inversion H1.
+    * rewrite <- H5 in eq.
+      rewrite H2 in eq.
+      now inversion eq.
+    * revert H0.
+      revert n1.
+      induction n1; intros H3 H0.
+        inversion H1. H3.
+        rewrite <- H9 in eq.
+        
+
+  induction X; intros tp y H1 H2.
+  - simpl.
+    destruct (get_typ e' y) eqn:eq;
+      inversion H1;
+      rewrite <- H4 in eq;
+      rewrite H2 in eq;
+      now inversion eq.
+  - simpl.
+    destruct (get_typ e' y) eqn:eq.
+    inversion H1.
+    erewrite <- IHX.
+    
+
+
+
+induction X.
++ intros e e' tp y H1 H2.
   inversion H1.
   simpl.
-  Print tshift.
-*)
-induction tp; intros X y e e' H1 H2.
-+ inversion H1.
+  destruct (get_typ e y); now inversion H2.
++ induction e; induction e'; intros tp y H1 H2; inversion H1.
   - simpl.
+    destruct (get_typ e' y).
+    rewrite <- IHe' with (y := y).
+    erewrite IHX.
+    inversion H1.
+      apply insert_S_v_typ.
+
+(*induction y.
+  - intros tp e e' H1 H2.
+    inversion H1.
+    simpl.
+    inversion H2.
+*)
+
+  induction tp; intros y e e' H1 H2.
+  - destruct e; try discriminate.
+    simpl in H2.
+    destruct (get_typ e y); try discriminate.
+    inversion H2.
+    inversion H1.
+    simpl.
+    Print get_typ.
+    simpl.
+
+
+
 
 Abort.
 
