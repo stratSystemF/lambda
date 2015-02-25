@@ -776,10 +776,12 @@ Require Import Relation_Definitions.
 
 
 Inductive oneStep : relation term :=
-| redTyp : forall phi n t, oneStep (applt (dept n t) phi) (subst_typ t 0 phi)
+| redTyp : forall phi n t, oneStep (applt (dept n t) phi) (subst_typ t 0 phi) (*TO check, I think there is a mistake*)
 | redTerm : forall (phi:typ) t (t':term), oneStep (Top.app (abs phi t) t') (subst t' 0  t)
 | redUnderAbs : forall phi t t', oneStep t t' -> oneStep (abs phi t) (abs phi t')
 | redUnderAbst : forall k t t', oneStep t t' -> oneStep (dept k t) (dept k t')
+(*We can do one parallelApp or two AppLeft AppRight. It's equivalent, but the second solution is
+easier for the proofs*)
 | parallelApp : forall t t' s s', oneStep t t' -> oneStep s s' -> oneStep (Top.app t s) (Top.app t' s')
 | redUnderAppt : forall t t' phi, oneStep t t' -> oneStep (applt t phi) (applt t' phi)
 | id : forall t, oneStep t t. (*TODO This is a choice, we could regret it later*)
@@ -817,12 +819,36 @@ induction H.
 - apply t_trans with (y:= applt y phi); firstorder.
 Qed.
 
+(*We split in two lemmas, then we will merge the lemmas*)
+Lemma congruAppL : forall t t' s, reduction t t' -> reduction (Top.app t s) (Top.app t' s).
+Proof.
+intuition.
+induction H.
+-  assert(oneStep (Top.app x s) (Top.app y s)). apply parallelApp; firstorder.
+  apply id; firstorder.
+  apply t_step; firstorder.
+- apply t_trans with (y:=Top.app y s); firstorder.
+Qed.
+
+Lemma congruAppR : forall t t' s, reduction t t' -> reduction (Top.app s t) (Top.app s t').
+Proof.
+intuition.
+induction H.
+-  assert(oneStep (Top.app s x) (Top.app s y)). apply parallelApp; firstorder.
+  apply id; firstorder.
+  apply t_step; firstorder.
+- apply t_trans with (y:=Top.app s y); firstorder.
+Qed.
+
 Lemma congruApp : forall t t' s s', reduction t t' -> reduction s s' -> reduction (Top.app t s) (Top.app t' s').
-
-
-
-
-
+Proof.
+intuition.
+apply t_trans with (y:= Top.app t s').
+apply congruAppR.
+apply H0.
+apply congruAppL.
+apply H.
+Qed.
 
 (*TODO Fix all the problems of namespaces! That's a pain*) 
 (* Inductive term := *)
