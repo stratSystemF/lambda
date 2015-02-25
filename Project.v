@@ -678,22 +678,70 @@ our reduction relation with an inductive predicate.*)
 later*)
 (*Parallel reduction. I didn't find a better, automatic way. Nothin about congruence relations
 in the lib. It's intuition driven, so to check*)
-Inductive oneStep : term -> term -> Prop :=
+
+Require Import Relation_Definitions.
+
+
+Inductive oneStep : relation term :=
 | redTyp : forall phi n t, oneStep (applt (dept n t) phi) (subst_typ t 0 phi)
 | redTerm : forall (phi:typ) t (t':term), oneStep (Top.app (abs phi t) t') (subst t' 0  t)
 | redUnderAbs : forall phi t t', oneStep t t' -> oneStep (abs phi t) (abs phi t')
 | redUnderAbst : forall k t t', oneStep t t' -> oneStep (dept k t) (dept k t')
 | parallelApp : forall t t' s s', oneStep t t' -> oneStep s s' -> oneStep (Top.app t s) (Top.app t' s')
 | redUnderAppt : forall t t' phi, oneStep t t' -> oneStep (applt t phi) (applt t' phi)
-| id : forall t, oneStep t t.
+| id : forall t, oneStep t t. (*TODO This is a choice, we could regret it later*)
+
+Require Import Relation_Operators.
+
+Definition reduction (t:term) (t':term) : Prop :=
+  clos_trans term oneStep t t'.
+
+(*We could probably factorize the following proofs*)
+Lemma congruAbs : forall t t' phi, reduction t t' -> reduction (abs phi t) (abs phi t').
+Proof.
+intuition.
+induction H.
+- assert(oneStep (abs phi x) (abs phi y)). apply redUnderAbs; apply H.
+  apply t_step; apply H0.
+- apply t_trans with (y:= abs phi y); firstorder.
+Qed.
+
+Lemma congruTypAbs : forall t t' k, reduction t t' -> reduction (dept k t) (dept k t').
+Proof.
+intuition.
+induction H.
+- assert(oneStep (dept k x) (dept k y)). apply redUnderAbst; apply H.
+  apply t_step; apply H0.
+- apply t_trans with (y:= dept k y); firstorder.
+Qed.
+
+Lemma congruTApp : forall t t' phi, reduction t t' -> reduction (applt t phi) (applt t' phi).
+Proof.
+intuition.
+induction H.
+- assert(oneStep (applt x phi) (applt y phi)). apply redUnderAppt; apply H.
+  apply t_step; apply H0.
+- apply t_trans with (y:= applt y phi); firstorder.
+Qed.
+
+Lemma congruApp : forall t t' s s', reduction t t' -> reduction s s' -> reduction (Top.app t s) (Top.app t' s').
+
+
+
+
+
 
 (*TODO Fix all the problems of namespaces! That's a pain*) 
-(* Inductive term := *)
-(* | var : nat -> term *)
-(* (* The latter nat is the de Brujin index of the term variable. *) *)
-(* | abs : typ -> term -> term *)
-(* (* The latter typ is the type of the term which is abstracted. *) *)
-(* | app : term -> term -> term *)
-(* | dept : nat -> term -> term *)
-(* (* The latter nat is the kind of the type which is abstracted. *) *)
-(* | applt: term -> typ -> term. *)
+(* Inductive term := *)
+(* | var : nat -> term *)
+(* (* The latter nat is the de Brujin index of the term variable. *) *)
+(* | abs : typ -> term -> term *)
+(* (* The latter typ is the type of the term which is abstracted. *)*)
+(* | app : term -> term -> term *)
+(* | dept : nat -> term -> term *)
+(* (* The latter nat is the kind of the type which is abstracted. *) *)
+(* | applt: term -> typ -> term. *)
+
+
+
+
