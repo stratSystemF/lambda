@@ -617,6 +617,57 @@ induction T; intros X e e' k H1 H2.
 Qed.
 
 (* Typing is invariant by weakening *)
+(* Je n'y arriverai jamais ! *)
+Lemma insert_kind_get_typ :
+  forall X e e' y tp,
+  insert_kind X e e' ->
+  get_typ e y = Some tp ->
+  (exists Y, Y >= X /\ get_typ e' y = Some (tshift tp Y)).
+Proof.
+(* induction on X then on e *)
+induction X.
++ intros e e' y tp H1 H2.
+  inversion H1.
+  simpl.
+  exists 0.
+  split.
+  - omega.
+  - destruct (get_typ e y); try discriminate.
+    now inversion H2.
++ induction e; destruct e'; try discriminate.
+  - intros y tp H1 H2.
+    inversion H1.
+  - intros y tp H1 H2.
+    inversion H1.
+    inversion H2.
+    destruct (get_typ e y) eqn:eq.
+    
+
+
+    assert (exists Y : nat, Y >= X /\ get_typ e' y = Some (tshift t Y)) as IHXsp.
+    exact (IHX e e' y t H3 eq).
+    destruct IHXsp as [Y [ineq IHXsp]].
+
+
+    simpl.
+    destruct (get_typ e' y) eqn:eq.
+    specialize IHX with (tp := 
+
+
+(* induction on insert_kind then on y *)
+induction 1; intros H1.
++ simpl.
+  destruct (get_typ e y); try discriminate.
+  exists 0.
+  split.
+  - omega.
+  - now inversion H1.
++ induction y.
+  - exists (S n).
+    split.
+    * omega.
+    * now inversion H1.
+  - simpl.
 
 Lemma insert_kind_get_typ :
   forall y e e' X tp,
