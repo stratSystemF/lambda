@@ -1,4 +1,3 @@
-
 Require Import Arith.
 
 Require Import Le.
@@ -688,7 +687,7 @@ induction y.
   - destruct e; destruct e'; try discriminate.
     simpl.
     intros H1.
-    destruct (get_typ e 0) eqn:eq1; try discriminate.
+(*    destruct (get_typ e 0) eqn:eq1; try discriminate.
     destruct (get_typ e' 0) eqn:eq2.
     * 
       inversion H.
@@ -774,7 +773,7 @@ induction X.
 
 
 
-
+*)
 Abort.
 
 Lemma insert_kind_typing :
@@ -810,6 +809,8 @@ Inductive env_subst : nat -> typ -> env -> env -> Prop :=
   env_subst 0 T e e' ->
   env_subst 0 T (v_typ k e) e'.
 
+
+(*Question 4*)
 
 
 
@@ -901,6 +902,84 @@ apply congruAppL.
 apply H.
 Qed.
 
+(*Question 3*)
+(*System F is type erasing*)
+Inductive normal : term -> Prop :=
+| directlyNeutral: forall t, neutral t -> normal t
+| absNorm :  forall v phi, normal v -> normal (abs phi v) 
+| absTNorm : forall v k, normal v -> normal (dept k v) 
+with neutral : term -> Prop :=
+| nV: forall n, neutral (var n)
+| nApplt: forall phi t, neutral t -> neutral (applt t phi)
+| nApp: forall t t', neutral t -> normal t' -> neutral (Top.app t t').
+
+
+
+(*Un terme neutre est un temre qui n'est pas une abstraction.*)
+
+
+Lemma normalPreservation : forall t n phi, (normal t -> normal (subst_typ t n phi)) /\ (neutral t -> neutral (subst_typ t n phi)). 
+Proof.
+intros t.
+induction t; intros nn phi.
+- firstorder.
+- simpl in *.
+  split.
+  intro.
+  apply absNorm.
+  apply IHt.
+  inversion H.
+  inversion H0.
+  apply H1.
+  intro.
+  inversion H.
+- simpl in *.
+  split.
+  + intro.
+    apply directlyNeutral.
+    apply nApp.
+    inversion H.
+    inversion H0.
+    firstorder.
+    firstorder.
+    inversion H.  
+    apply IHt2.
+    inversion H.
+    inversion H0.
+    inversion H4.
+    easy.
+  + intro.
+    apply nApp;
+    inversion H.
+    apply IHt1.
+    apply H2.
+    apply IHt2.
+    apply H3.
+- firstorder.
+  simpl in *.
+  apply absTNorm.
+  apply IHt.
+  inversion H.  
+  simpl in *.
+  inversion H0.
+  apply H1.
+  inversion H.
+- firstorder.
+  simpl in *.
+  apply directlyNeutral.
+  apply nApplt.
+  apply IHt.
+  inversion H.
+  inversion H0.
+  apply H3.
+  simpl in *.
+  apply nApplt.
+  apply IHt.
+  inversion H.
+  apply H1.
+Qed.
+
+
 (*TODO Fix all the problems of namespaces! That's a pain*) 
 (* Inductive term := *)
 (* | var : nat -> term *)
@@ -911,6 +990,7 @@ Qed.
 (* | dept : nat -> term -> term *)
 (* (* The latter nat is the kind of the type which is abstracted. *) *)
 (* | applt: term -> typ -> term. *)
+
 
 
 
