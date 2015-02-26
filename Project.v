@@ -45,6 +45,7 @@ Fixpoint tshift (t:typ) (v:nat) : typ :=
  * It is assumed that v is removed from the environment stack
  * and, as always, it is assumed that v does not appear in newt.
  *)
+
 Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ := 
   match t with
   | vart l => (*several cases*)
@@ -151,10 +152,7 @@ Inductive env :=
 Fixpoint get_typ e (i:nat) :=
   match e with
     | empty => None               
-    | v_typ k tl => match get_typ tl i with
-                    | None => None
-                    | Some tp => Some (tshift tp 0)
-                    end
+    | v_typ k tl => get_typ tl i                                        
     | v t tl => match i with
                   | 0 => Some t
                   | S x => get_typ tl x
@@ -623,158 +621,6 @@ Lemma insert_kind_get_typ :
   get_typ e y = Some tp ->
   (exists Y, Y >= X /\ get_typ e' y = Some (tshift tp Y)).
 Proof.
-(* induction on X then on e *)
-induction X.
-+ intros e e' y tp H1 H2.
-  inversion H1.
-  simpl.
-  exists 0.
-  split.
-  - omega.
-  - destruct (get_typ e y); try discriminate.
-    now inversion H2.
-+ induction e; destruct e'; try discriminate.
-  - intros y tp H1 H2.
-    inversion H1.
-  - intros y tp H1 H2.
-    inversion H1.
-    inversion H2.
-    destruct (get_typ e y) eqn:eq.
-    
-(*
-
-    assert (exists Y : nat, Y >= X /\ get_typ e' y = Some (tshift t Y)) as IHXsp.
-    exact (IHX e e' y t H3 eq).
-    destruct IHXsp as [Y [ineq IHXsp]].
-
-
-    simpl.
-    destruct (get_typ e' y) eqn:eq.
-    specialize IHX with (tp := 
-*)
-
-(* induction on insert_kind then on y *)
-(*induction 1; intros H1.
-+ simpl.
-  destruct (get_typ e y); try discriminate.
-  exists 0.
-  split.
-  - omega.
-  - now inversion H1.
-+ induction y.
-  - exists (S n).
-    split.
-    * omega.
-    * now inversion H1.
-  - simpl.
-*)
-(*Lemma insert_kind_get_typ :
-  forall y e e' X tp,
-  insert_kind X e e' ->
-  get_typ e y = Some tp ->
-  get_typ e' y = Some (tshift tp X).
-Proof.
-induction y.
-+ induction 1.
-  - simpl.
-    intros H1.
-    destruct (get_typ e 0); try discriminate.
-    now inversion H1.
-  - simpl.
-    intros H1.
-    destruct (get_typ e (S n));
-    now inversion H1.
-  - destruct e; destruct e'; try discriminate.
-    simpl.
-    intros H1.
-(*    destruct (get_typ e 0) eqn:eq1; try discriminate.
-    destruct (get_typ e' 0) eqn:eq2.
-    *)
-      inversion H.
-      inversion eq1.
-      
-      
-
-
-
-  
-induction 1.
-+ simpl.
-  destruct (get_typ e y); try discriminate.
-  intros H1; now inversion H1.
-+ intros H1.
-  induction y.
-  - simpl.
-    now inversion H1.
-  - apply IHy.
-
-induction e; induction e'; try (intros X tp y H1 H2; inversion H1; now inversion H2).
-(*+ intros X tp y H1 H2.
-  simpl.
-  destruct (get_typ e y); now inversion H2.*)
-+ intros X tp y H1 H2.
-  simpl.
-  destruct (get_typ e' y) eqn:eq.
-  - inversion H1.
-    * rewrite <- H5 in eq.
-      rewrite H2 in eq.
-      now inversion eq.
-    * revert H0.
-      revert n1.
-      induction n1; intros H3 H0.
-        inversion H1. H3.
-        rewrite <- H9 in eq.
-        
-
-  induction X; intros tp y H1 H2.
-  - simpl.
-    destruct (get_typ e' y) eqn:eq;
-      inversion H1;
-      rewrite <- H4 in eq;
-      rewrite H2 in eq;
-      now inversion eq.
-  - simpl.
-    destruct (get_typ e' y) eqn:eq.
-    inversion H1.
-    erewrite <- IHX.
-    
-
-
-
-induction X.
-+ intros e e' tp y H1 H2.
-  inversion H1.
-  simpl.
-  destruct (get_typ e y); now inversion H2.
-+ induction e; induction e'; intros tp y H1 H2; inversion H1.
-  - simpl.
-    destruct (get_typ e' y).
-    rewrite <- IHe' with (y := y).
-    erewrite IHX.
-    inversion H1.
-      apply insert_S_v_typ.
-
-(*induction y.
-  - intros tp e e' H1 H2.
-    inversion H1.
-    simpl.
-    inversion H2.
-*)
-
-  induction tp; intros y e e' H1 H2.
-  - destruct e; try discriminate.
-    simpl in H2.
-    destruct (get_typ e y); try discriminate.
-    inversion H2.
-    inversion H1.
-    simpl.
-    Print get_typ.
-    simpl.
-
-
-
-*)
-Abort.
 
 Lemma insert_kind_typing :
   forall trm tp X e e',
@@ -787,9 +633,9 @@ induction trm; intros tp X e e' H1 H2.
   apply typed_var.
   - admit.
   - now apply insert_kind_wf_env with (X := X) (e := e).
-+ 
-    
-
++ simpl in *. 
+  inversion H2.
+  
 
 Abort.
 
@@ -798,30 +644,22 @@ Abort.
 Inductive env_subst : nat -> typ -> env -> env -> Prop := 
 | subst_Svtyp: (*under the constructors*)
   forall e e' n k T,
-  wf_typ e' T ->
+  (*wf_typ e' T ->*)
   env_subst n T e e' ->
   env_subst (S n) (tshift T 0) (v_typ k e) (v_typ k e')   
 | subst_SV: (*Substitute from the end to the beginning*)
   forall e e' n T tp,
-  wf_typ e' T ->
+  (*wf_typ e' T ->*)
   env_subst n T e e' ->
   env_subst n T (v tp e) (v (tsubst tp n T) e')
 | substv: (*We need to substitue in e*)
-  forall e e' k T,
-  wf_typ e' T ->
-  env_subst 0 T e e' ->
-  env_subst 0 T (v_typ k e) e'.
+  forall e k T,
+    wf_typ e T ->
+  env_subst 0 T (v_typ k e) e.
 
 (* The subject is not clear but I think that having
    some weakening lemmas is required here too. *)
-Lemma env_subst_get_kind :
-  forall X T e e' Y,
-  env_subst X T e e' ->
-  get_kind e Y = get_kind e' Y.
-Proof.
-induction 1; intuition.
-+
-Admitted.
+
 
 Lemma get_kind_before :
   forall e X,
@@ -841,46 +679,39 @@ destruct X; simpl; intros H; trivial.
 rewrite Nat.sub_0_r.
 now apply get_kind_before.
 Qed.
+Print tsubst.
 
-(*
-Inductive extended_env (e : env) : nat -> env -> Prop :=
-| extend_0 : forall k,
-             extended_env e 0 (v_typ k e)
-| extend_S : forall k e' n,
-             extended_env e n e' ->
-             extended_env e (S n) (v_typ k e')
-.
-*)
 
-Lemma wf_typ_tshift :
-  forall tp e k,
-  wf_typ e tp ->
-  wf_typ (v_typ k e) (tshift tp 0).
+
+
+Lemma env_subst_var : forall n X T e e' ,  env_subst X T e e' -> wf_typ e (vart n) -> wf_typ e' (tsubst (vart n) X T).
 Proof.
-induction tp; simpl; intuition.
+Abort.
 
-Admitted.
 
 Lemma env_subst_wf_typ :
   forall tp X T e e',
   env_subst X T e e' ->
-  wf_typ e' T ->
   wf_typ e tp ->
   wf_typ e' (tsubst tp X T).
 Proof.
-induction tp; intros X T e e' H1 H2 H3; simpl in *.
-+ destruct (beq_nat X n); trivial.
-  destruct (le_gt_dec n X).
-  - simpl.
-    erewrite <- env_subst_get_kind; eauto.
-  - simpl.
-    apply get_kind_before_rewritten.
-    erewrite <- env_subst_get_kind; eauto.
-+ destruct H3.
-  split; [eapply IHtp1 | eapply IHtp2]; eauto.
-+ eapply IHtp; eauto.
-  - now apply subst_Svtyp.
-  - now apply wf_typ_tshift.
+induction tp.
+- unfold tshift. 
+  fold tshift.
+  intros X T e e' H1 H2. (*HERE *)
+  case (le_gt_dec X n).
+  intro H3.
+  simpl in *.  
+  admit. (*These should be true Inspired by Vouillon*)
+  admit.
+- firstorder.
+- firstorder.
+  simpl in * .
+  apply (IHtp _ (tshift T 0) (v_typ n e) _).
+  Print env_subst.
+  apply subst_Svtyp.
+  apply H.
+  apply H0.
 Qed.
 
 Lemma env_subst_wf_env :
@@ -889,8 +720,11 @@ Lemma env_subst_wf_env :
   wf_env e ->
   wf_env e'.
 Proof.
-induction 1; simpl; intuition.
-eapply env_subst_wf_typ; eauto.
+induction 1.
+-firstorder. 
+-firstorder. 
+ eapply env_subst_wf_typ; eauto.
+- firstorder.
 Qed.
 
 (*Question 4*)
