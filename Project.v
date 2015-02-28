@@ -1092,7 +1092,7 @@ induction H; intros n' u W H1 E1.
         rewrite <- (get_typ_wk e x n').
         apply H.
         apply H5.
-        admit (*From typing*)
+        admit. (*From typing*)
       * intro H3.
         apply typed_var.
         admit.
