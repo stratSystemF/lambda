@@ -540,9 +540,9 @@ Qed.
 Inductive insert_kind : nat -> env -> env -> Prop :=
 | insert_0 : forall k e,
              insert_kind 0 e (v_typ k e)
-| insert_S_v : forall n tp e e',
-               insert_kind (S n) e e'  ->
-               insert_kind (S n) (v tp e) (v (tshift tp (S n)) e')
+| insert_v : forall n tp e e',
+               insert_kind n e e'  ->
+               insert_kind n (v tp e) (v (tshift tp n) e')
 | insert_S_v_typ : forall n k e e',
                    insert_kind n e e' ->
                    insert_kind (S n) (v_typ k e) (v_typ k e').
@@ -666,11 +666,10 @@ intros e e' X trm tp H1 H2; revert e' H1; induction H2; intros e' H1; simpl.
   - eapply insert_kind_wf_env; eauto.
 + apply typed_abs.
   apply IHtyping.
-  apply insert_S_v.
-  destruct X.
-  - simpl. apply insert_0.
-
-Qed.
+  apply insert_v.
+  exact H1.
++ specialize IHtyping1 with (e' := e') (1 := H1).
+Abort.
 
 (* Question 3 *)
 
