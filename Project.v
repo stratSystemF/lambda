@@ -330,22 +330,22 @@ Qed.
 
 (* Typing predicate *)
 (* After Figure 6: Stratified System F Type-Checking Rules *)
-Inductive typing (e : env) : term -> typ -> Prop :=
-| typed_var : forall (tp : typ) (x : nat),
+Inductive typing : env -> term -> typ -> Prop :=
+| typed_var : forall e (tp : typ) (x : nat),
                 get_typ e x = Some tp ->
                 wf_env e ->
                 typing e (var x) tp
-| typed_abs : forall (tp1 tp2 : typ) (trm1 : term),
+| typed_abs : forall e (tp1 tp2 : typ) (trm1 : term),
                 typing (v tp1 e) trm1 tp2 ->
                 typing e (abs tp1 trm1) (arrow tp1 tp2)
-| typed_app : forall (tp tp2 : typ) (trm1 trm2 : term),
-                typing e trm1 (arrow tp2 tp) ->
+| typed_app : forall e (tp tp2 : typ) (trm1 trm2 : term),
+                typing  e trm1 (arrow tp2 tp) ->
                 typing e trm2 tp2 ->
                 typing e (Top.app trm1 trm2) tp 
-| typed_dept : forall (kl : nat) (trm1 : term) (tp1 : typ),
+| typed_dept : forall e (kl : nat) (trm1 : term) (tp1 : typ),
                  typing (v_typ kl e) trm1 tp1 ->
                  typing e (dept kl trm1) (fall kl tp1)
-| typed_applt : forall (trm : term) (tp1 tp2 : typ) (k : nat),
+| typed_applt : forall e (trm : term) (tp1 tp2 : typ) (k : nat),
                   typing e trm (fall k tp1) ->
                   kinding e tp2 k ->
                   typing e (applt trm tp2) (tsubst tp1 0 tp2)
@@ -791,12 +791,6 @@ induction 1.
 - firstorder.
 Qed.
 
-Lemma env_subst_var : forall n X T e e' ,  env_subst X T e e' -> wf_typ e (vart n) -> wf_typ e' (tsubst (vart n) X T).
-Proof.
-induction 1.
-- firstorder.
-
-Abort.
 
 Lemma lt_perso : forall n x, n < x -> (exists y, y > 0 /\ x = n+y).  
 intuition.
@@ -806,10 +800,10 @@ induction n.
 - assert (n < x). 
   omega.
   firstorder.
-  exists (x0 -1).
-  
+  exists (x0 -1).  
   omega.
 Qed.
+
 
 Lemma env_subst_wf_typ :
   forall tp X T e e',
@@ -822,21 +816,6 @@ induction tp.
 - unfold tshift. 
   fold tshift.
   intros X T e e' H1 Henv H2. (*HERE *)
-  case (le_gt_dec X n).
-  intro H3.
-  simpl in *.
-  admit. (*These should be true Inspired by Vouillon*)
-  intro H3.
-  specialize lt_perso with (1:= H3).
-  intro.  
-  destruct  H.
-  firstorder.
-  rewrite H0.
-  simpl.
-
-  +intro.
-   P
-
   admit.
 - firstorder.
 - firstorder.
@@ -967,7 +946,6 @@ with neutral : term -> Prop :=
 | nApp: forall t t', neutral t -> normal t' -> neutral (Top.app t t').
 
 
-
 (*Un terme neutre est un temre qui n'est pas une abstraction.*)
 
 
@@ -1032,18 +1010,63 @@ induction t; intros nn phi.
   apply H1.
 Qed.
 
-(*TODO Fix all the problems of namespaces! That's a pain*) 
-(* Inductive term := *)
-(* | var : nat -> term *)
-(* (* The latter nat is the de Brujin index of the term variable. *) *)
-(* | abs : typ -> term -> term *)
-(* (* The latter typ is the type of the term which is abstracted. *)*)
-(* | app : term -> term -> term *)
-(* | dept : nat -> term -> term *)
-(* (* The latter nat is the kind of the type which is abstracted. *) *)
-(* | applt: term -> typ -> term. *)
+
+Fixpoint remove_var (x:nat) (e:env) {struct e}: env :=
+  match e with
+       | empty => empty
+       | v_typ k e => v_typ k (remove_var x e)
+       | v t e => match x with
+                      | 0 => e
+                      |S X => v t (remove_var X e)
+                  end
+  end.
 
 
 
+Lemma subst_preserves_typing :
+  forall (e : env) (x : nat) (t u : term) (V W : typ),
+  typing e t V -> 
+  typing (remove_var x e) u W -> get_typ e x = Some W ->
+  typing (remove_var x e) (subst t x u) V.
+Proof.
+intros e n t u V W H ; generalize n u W; clear n u W;
+induction H; intros n' u W H1 E1.
+  - simpl. case_eq (beq_nat x n').
+    +  intro H2.
+       assert( x=n').
+       apply beq_nat_true.
+       apply H2.
+       rewrite H3 in *.
+       rewrite E1 in H.
+       inversion H.
+       rewrite <- H5.
+       apply H1.
+    + intro H2. 
+      case (le_gt_dec).
+      * intro H3.
+        apply typed_var.
+        admit. (*By vouillon*)
+        admit. (*doable*)
+      * intro H3.
+        apply typed_var.
+        admit.
+        admit.
+  - simpl. apply typed_abs.
+    apply (IHtyping  (S n') (shift u 0) W). trivial.
+    admit.
+    admit.
+  -exact (typed_app _ _ _ _ _ (IHtyping1 _ u W H1 E1) (IHtyping2 _ u W H1 E1)).
+  - simpl; apply typed_dept. apply (IHtyping n' (shift_typ u 0) (tshift W 0)).
+     * admit.
+     * simpl; rewrite E1; trivial.
+  - simpl. apply typed_applt with (1 := (IHtyping _ u W H1 E1)). 
+    admit. (*OBVIOUS*)
+Qed.
 
 
+Lemma typing_weakening_var_ind :
+forall (e : env) (x : nat) (t : term) (U : typ),
+wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
+Proof.
+
+(* Do the same for kinding weakening and preservation*)
