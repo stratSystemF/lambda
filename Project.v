@@ -41,6 +41,20 @@ Fixpoint tshift (t:typ) (v:nat) : typ :=
    | fall rank sP  => fall rank (tshift sP (1 + v)) 
    end.
 
+Lemma tshift_lemma_1 :
+  forall (T : typ) (X Y : nat),
+  tshift (tshift T X) (S (X + Y)) = tshift (tshift T (X + Y)) X.
+induction T; intros X Y.
++ unfold tshift.
+  destruct (le_gt_dec (S (X + Y)));
+  destruct (le_gt_dec (X + Y) n);
+  destruct (le_gt_dec X n);
+  destruct (le_gt_dec X (1 + n)); trivial; omega.
++ apply f_equal2 with (f := arrow); trivial.
++ simpl; apply f_equal2 with (f := fall) ; trivial.
+  apply IHT with (X := S X).
+Qed.
+
 (* The following function substitutes the type variable number v by newt inside t.
  * It is assumed that v is removed from the environment stack
  * and, as always, it is assumed that v does not appear in newt.
@@ -147,7 +161,7 @@ Inductive env :=
 | v : typ -> env -> env.
 
 
-Definition shift_under_Some (A B : Set) (f: A -> B) (x: option A):=
+Definition map_under_option (A B : Set) (f: A -> B) (x: option A):=
   match x with 
       | Some x => Some (f x)
       | None => None
@@ -158,7 +172,7 @@ Definition shift_under_Some (A B : Set) (f: A -> B) (x: option A):=
 Fixpoint get_typ e (i:nat) :=
   match e with
     | empty => None               
-    | v_typ k tl => shift_under_Some _ _ (fun y=> tshift y 0) (get_typ tl i)                                        
+    | v_typ k tl => map_under_option _ _ (fun y=> tshift y 0) (get_typ tl i)                                        
     | v t tl => match i with
                   | 0 => Some t
                   | S x => get_typ tl x
@@ -168,7 +182,7 @@ Fixpoint get_typ e (i:nat) :=
 (* The following function is used to get the kind of the type variable
  * of index i in the environment e.
  *)
-Print tshift.
+
 Fixpoint get_kind e (i:nat) :=
   match e with
     | empty => None
@@ -621,30 +635,42 @@ induction T; intros X e e' k H1 H2.
 Qed.
 
 (* Typing is invariant by weakening *)
-(* Je n'y arriverai jamais ! *)
+
 Lemma insert_kind_get_typ :
-  forall X e e' y tp,
+  forall (X : nat) (e e' : env),
   insert_kind X e e' ->
-  get_typ e y = Some tp ->
-  (exists Y, Y >= X /\ get_typ e' y = Some (tshift tp Y)).
+  forall (y : nat),
+  map_under_option _ _ (fun y => tshift y X) (get_typ e y) = get_typ e' y.
 Proof.
+induction 1; intros y; simpl.
++ trivial.
++ induction y; trivial.
++ erewrite <- IHinsert_kind.
+  destruct (get_typ e y); trivial.
+  simpl.
+  apply f_equal.
+  exact (tshift_lemma_1 t 0 n).
+Qed.
 
 Lemma insert_kind_typing :
-  forall trm tp X e e',
+  forall (e e' : env) (X : nat) (trm : term) (tp : typ),
   insert_kind X e e' ->
   typing e trm tp ->
   typing e' (shift_typ trm X) (tshift tp X).
 Proof.
-induction trm; intros tp X e e' H1 H2.
-+ inversion H2.
-  apply typed_var.
-  - admit.
-  - now apply insert_kind_wf_env with (X := X) (e := e).
-+ simpl in *. 
-  inversion H2.
-  
+intros e e' X trm tp H1 H2; revert e' H1; induction H2; intros e' H1; simpl.
++ apply typed_var.
+  - rewrite <- insert_kind_get_typ with (X := X) (e := e); trivial.
+    rewrite H.
+    reflexivity.
+  - eapply insert_kind_wf_env; eauto.
++ apply typed_abs.
+  apply IHtyping.
+  apply insert_S_v.
+  destruct X.
+  - simpl. apply insert_0.
 
-Abort.
+Qed.
 
 (* Question 3 *)
 
