@@ -1021,7 +1021,22 @@ Fixpoint remove_var (x:nat) (e:env) {struct e}: env :=
                   end
   end.
 
-
+Lemma get_typ_wk : forall e x y, x < y -> get_typ e x = get_typ (remove_var y e) x.
+Proof.
+induction e.
+- eauto.
+- firstorder.
+  simpl in *.
+  rewrite (IHe x y).
+  reflexivity.
+  apply H.
+- intros x y H.
+  induction y.
+  * inversion H.
+  * induction x. 
+    +eauto. 
+    +apply IHe; omega.
+Qed.
 
 Lemma subst_preserves_typing :
   forall (e : env) (x : nat) (t u : term) (V W : typ),
@@ -1045,8 +1060,14 @@ induction H; intros n' u W H1 E1.
       case (le_gt_dec).
       * intro H3.
         apply typed_var.
-        admit. (*By vouillon*)
-        admit. (*doable*)
+        SearchAbout(beq_nat).
+        specialize (beq_nat_false x n' H2).
+        intro.
+        assert (x<n'). omega.
+        rewrite <- (get_typ_wk e x n').
+        apply H.
+        apply H5.
+        admit (*From typing*)
       * intro H3.
         apply typed_var.
         admit.
