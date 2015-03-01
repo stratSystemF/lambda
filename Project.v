@@ -63,7 +63,7 @@ Qed.
 Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ := 
   match t with
   | vart l => (*several cases*)
-    if beq_nat v l then
+    if eq_nat_dec v l then
       newt (*That's the variable to substitue*)
     else if le_gt_dec l v then (*That's a variable before the target variable*) 
       vart l
@@ -83,29 +83,17 @@ induction T; intros T' X Y.
   destruct (le_gt_dec (S (X + Y)) n).
   - destruct (le_gt_dec n X); try omega.
     destruct (le_gt_dec (1 + n) X); try omega.
-    assert (beq_nat X n = false) as H1.
-    apply beq_nat_false_iff.
-    omega.
-    rewrite H1.
-    assert (beq_nat X (1 + n) = false) as H2.
-    apply beq_nat_false_iff.
-    omega.
-    rewrite H2.
+    destruct (eq_nat_dec X n); try omega.
+    destruct (eq_nat_dec X (1 + n)); try omega.
     simpl.
     destruct (le_gt_dec (X + Y) (n - 1)); try apply f_equal; omega.
   - destruct (le_gt_dec n X);
-    destruct (beq_nat X n) eqn:eq; auto;
+    destruct (eq_nat_dec X n) eqn:eq; auto;
     simpl;
     apply f_equal.
     * destruct (le_gt_dec (X + Y) n); trivial.
-      apply False_ind.
-      destruct (beq_nat_false_iff X n) as [H _].
-      apply H; trivial.
       omega.
     * destruct (le_gt_dec (X + Y) (n - 1)); trivial.
-      apply False_ind.
-      destruct (beq_nat_false_iff X n) as [H _].
-      apply H; trivial.
       omega.
 + simpl; apply f_equal2 with (f := arrow); trivial.
 + simpl; apply f_equal2 with (f := fall); trivial.
@@ -172,7 +160,7 @@ Fixpoint subst_typ (trm:term) (v:nat) (newt:typ) :=
 Fixpoint subst (trm:term) (v:nat) (newt:term) :=
   match trm with
   | var l =>
-    if beq_nat l v then newt
+    if eq_nat_dec l v then newt
     else if le_gt_dec l v then (*That's a variable before the target variable*) 
       var l
     else (* That's a free variable, but we have a hole (we removed the variable)
@@ -1120,27 +1108,21 @@ Lemma subst_preserves_typing :
 Proof.
 intros e n t u V W H ; generalize n u W; clear n u W;
 induction H; intros n' u W H1 E1.
-  - simpl. case_eq (beq_nat x n').
-    +  intro H2.
-       assert( x=n').
-       apply beq_nat_true.
-       apply H2.
-       rewrite H3 in *.
+  - simpl. case_eq (eq_nat_dec x n').
+    +  intros H2 _.
+       rewrite H2 in *.
        rewrite E1 in H.
        inversion H.
-       rewrite <- H5.
+       rewrite <- H4.
        apply H1.
-    + intro H2. 
+    + intros H2 _. 
       case (le_gt_dec).
       * intro H3.
         apply typed_var.
-        SearchAbout(beq_nat).
-        specialize (beq_nat_false x n' H2).
-        intro.
         assert (x<n'). omega.
         rewrite <- (get_typ_wk e x n').
         apply H.
-        apply H5.
+        apply H4.
         admit. (*From typing*)
       * intro H3.
         apply typed_var.
