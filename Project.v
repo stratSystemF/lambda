@@ -74,6 +74,47 @@ Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ :=
   | fall rank sp => fall rank (tsubst sp (1 + v) (tshift newt 0)) 
   end.
 
+Lemma tsubst_lemma_1 :
+  forall (T T' : typ) (X Y : nat),
+  (tshift (tsubst T X T') (X + Y)) =
+  (tsubst (tshift T (S (X + Y))) X (tshift T' (X + Y))).
+induction T; intros T' X Y.
++ unfold tshift; unfold tsubst; fold tshift; fold tsubst.
+  destruct (le_gt_dec (S (X + Y)) n).
+  - destruct (le_gt_dec n X); try omega.
+    destruct (le_gt_dec (1 + n) X); try omega.
+    assert (beq_nat X n = false) as H1.
+    apply beq_nat_false_iff.
+    omega.
+    rewrite H1.
+    assert (beq_nat X (1 + n) = false) as H2.
+    apply beq_nat_false_iff.
+    omega.
+    rewrite H2.
+    simpl.
+    destruct (le_gt_dec (X + Y) (n - 1)); try apply f_equal; omega.
+  - destruct (le_gt_dec n X);
+    destruct (beq_nat X n) eqn:eq; auto;
+    simpl;
+    apply f_equal.
+    * destruct (le_gt_dec (X + Y) n); trivial.
+      apply False_ind.
+      destruct (beq_nat_false_iff X n) as [H _].
+      apply H; trivial.
+      omega.
+    * destruct (le_gt_dec (X + Y) (n - 1)); trivial.
+      apply False_ind.
+      destruct (beq_nat_false_iff X n) as [H _].
+      apply H; trivial.
+      omega.
++ simpl; apply f_equal2 with (f := arrow); trivial.
++ simpl; apply f_equal2 with (f := fall); trivial.
+  rewrite <- (plus_O_n (X+Y)) at 3.
+  rewrite <- (tshift_lemma_1 T' 0 (X + Y)).
+  rewrite plus_O_n.
+  apply (IHT _ (S X)).
+Qed.
+
 (* Question 2 : Terms *)
 
 Inductive term :=
@@ -658,7 +699,7 @@ Lemma insert_kind_typing :
   typing e trm tp ->
   typing e' (shift_typ trm X) (tshift tp X).
 Proof.
-intros e e' X trm tp H1 H2; revert e' H1; induction H2; intros e' H1; simpl.
+intros e e' X trm tp H1 H2; revert e' X H1; induction H2; intros e' X H1; simpl.
 + apply typed_var.
   - rewrite <- insert_kind_get_typ with (X := X) (e := e); trivial.
     rewrite H.
@@ -666,10 +707,18 @@ intros e e' X trm tp H1 H2; revert e' H1; induction H2; intros e' H1; simpl.
   - eapply insert_kind_wf_env; eauto.
 + apply typed_abs.
   apply IHtyping.
-  apply insert_v.
-  exact H1.
-+ specialize IHtyping1 with (e' := e') (1 := H1).
-Abort.
+  now apply insert_v.
++ eapply typed_app.
+  now eapply IHtyping1.
+  now eapply IHtyping2.
++ apply typed_dept.
+  apply IHtyping.
+  now apply insert_S_v_typ.
++ rewrite (tsubst_lemma_1 _ _ 0 X).
+  eapply typed_applt; eauto.
+  simpl.
+  eapply insert_kind_kinding; eauto.
+Qed.
 
 (* Question 3 *)
 
