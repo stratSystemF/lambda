@@ -802,56 +802,7 @@ assert (forall X e' k, get_kind (v_typ k e') X  = None -> get_kind  e' X = None)
 Qed.
 
 
-Lemma wf_typ_weakening_bound :
-  forall (e : env) (T U : typ),
-  wf_typ e T -> wf_typ e U -> wf_typ (v U e) (tshift T 0).
-intros e T U H1 H2. 
-Proof.
-admit.
-Qed.
 
-Lemma wf_typ_weakening_var :
-  forall (e : env) (T U : typ),
-  wf_typ e U -> wf_typ (v T e ) U.
-intros e T U H; apply wf_typ_env_weaken with (2 := H); simpl; trivial.
-Qed.
-
-Lemma wf_typ_strengthening_var :
-  forall (e : env) (T U : typ),
-  wf_typ (v T e ) U -> wf_typ e U.
-Proof.
-intros e T U H; apply wf_typ_env_weaken with (2 := H); simpl; trivial.
-Qed.
-
-Lemma wf_typ_ebound :
-  forall (T U : typ) V (e : env),
-  wf_typ (v U e) T -> wf_typ (v_typ V e) T.
-Proof.
-admit.
-Qed.
-
-
-
-Lemma myweakn2 : forall T e' k, wf_typ e' T -> wf_typ (v_typ k e') (tshift T 0).
-Proof.
-admit.
-Qed.
-
-Lemma wf_implied: forall e X T e',env_subst X T e e' -> wf_env e' ->wf_typ e' T.
-Proof.
-induction 1.
-- intros.
-  simpl in *.
-  apply myweakn2.
-  apply IHenv_subst.
-  apply H0.
-- intuition.
-  simpl in *.
-  apply (wf_typ_weakening_var e').
-  apply IHenv_subst.
-  apply H0.
-- firstorder.
-Qed.
 
 
 Lemma lt_perso : forall n x, n < x -> (exists y, y > 0 /\ x = n+y).  
@@ -1100,6 +1051,29 @@ induction e.
     +apply IHe; omega.
 Qed.
 
+
+Lemma typing_wf_env : forall e u W, typing e u W -> wf_env e.
+Proof.
+induction 1; trivial.
+simpl in IHtyping.
+apply IHtyping.
+Qed.
+
+Lemma get_remove : forall e n x , S x > n -> get_typ (remove_var n e) (x) = get_typ e (S x).
+Proof.
+induction e;induction n; induction x; trivial;firstorder.
+- simpl.
+  rewrite <- (IHe n 0).
+  reflexivity.
+  omega.
+- simpl get_typ. 
+  rewrite <- (IHe n (S x)).
+  simpl.
+  reflexivity.
+  apply H.
+- omega.
+Qed.
+
 Lemma subst_preserves_typing :
   forall (e : env) (x : nat) (t u : term) (V W : typ),
   typing e t V -> 
@@ -1123,11 +1097,31 @@ induction H; intros n' u W H1 E1.
         rewrite <- (get_typ_wk e x n').
         apply H.
         apply H4.
-        admit. (*From typing*)
+        apply (typing_wf_env (remove_var n' e) u W).
+        apply H1.
+(*From typing*)
       * intro H3.
         apply typed_var.
-        admit.
-        admit.
+
+(* x>n' get_typ (remove_var n' e) (x-1) = get_typ e x*)      
+        assert  (x = S (x-1)).
+        omega.
+        rewrite H4.
+        simpl.
+   
+     rewrite get_remove.
+
+        assert(x-1-0=x-1).
+        omega.
+  
+      rewrite H5.
+      assert( S (x - 1)=x).
+      omega.
+      rewrite H6.
+      apply H.
+      omega.
+      apply (typing_wf_env (remove_var n' e) u W).
+      apply H1.
   - simpl. apply typed_abs.
     apply (IHtyping  (S n') (shift u 0) W). trivial.
     admit.
