@@ -726,29 +726,8 @@ Inductive env_subst : nat -> typ -> env -> env -> Prop :=
     wf_typ e T ->
   env_subst 0 T (v_typ k e) e.
 
-(* The subject is not clear but I think that having
-   some weakening lemmas is required here too. *)
-
-(* Rewrite this *)
-(* The following lemmas are deeply inspired by Vouillon
-   and even copy/paste for a part of it. *)
-Lemma wf_typ_env_weaken :
-  forall (T : typ) (e e' : env),
-  (forall (X : nat), get_kind e' X = None -> get_kind e X = None) ->
-  wf_typ e T -> wf_typ e' T.
-Proof.
-induction T; simpl; auto.
--intros e e' H (H1, H2). split.
- apply (IHT1 _ _ H H1).
-  apply (IHT2 _ _ H H2).
-- intros e e' H HT. 
-  apply IHT with (2:= HT ).
-  induction X;
-            [trivial
-            | simpl; intro H3; rewrite H; trivial;
-              generalize H3; case (get_bound e' X); simpl; trivial;
-              intros; discriminate  ].
-Qed.
+(* The subject does not clearly ask for it
+ * but we'll prove some weakening lemmas. *)
 
 Lemma wf_typ_weakening_v_typ :
   forall (e : env) (T : typ) (X : nat),
@@ -759,12 +738,26 @@ eapply insert_kind_wf_typ; eauto.
 apply insert_0.
 Qed.
 
+Lemma wf_typ_weakening_var_generalized :
+  forall (T : typ) (e e' : env),
+  (forall (X : nat), get_kind e' X = None -> get_kind e X = None) ->
+  wf_typ e T -> wf_typ e' T.
+Proof.
+induction T; simpl; auto.
++ intros e e' H [H1 H2].
+  split; eapply IHT1 || eapply IHT2; eauto.
++ intros e e' H HT. 
+  apply IHT with (e := v_typ n e); trivial.
+  induction X; trivial.
+  simpl; firstorder.
+Qed.
+
 Lemma wf_typ_weakening_var :
   forall (e : env) (T1 T2 : typ),
   wf_typ e T2 -> wf_typ (v T1 e) T2.
 Proof.
 intros.
-apply wf_typ_env_weaken with (e:= e); trivial.
+apply wf_typ_weakening_var_generalized with (e:= e); trivial.
 Qed.
 
 Lemma env_subst_get_bound_lt :
