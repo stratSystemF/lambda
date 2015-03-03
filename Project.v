@@ -1074,6 +1074,67 @@ induction e;induction n; induction x; trivial;firstorder.
 - omega.
 Qed.
 
+Lemma typ_remove : forall u e  W tp1 ,typing e u W  ->(wf_typ  e tp1) -> typing (v tp1 e) (shift u 0 ) W.
+induction u.
+ * simpl. intuition.
+   apply typed_var.
+   simpl.
+   inversion H.
+   firstorder.
+   simpl.
+   firstorder.
+   apply (typing_wf_env e (var n) W).
+   apply H.
+ * intuition.
+   simpl.
+   inversion H.
+   
+   apply (typed_abs).
+  
+Lemma get_kind_remove : forall e x x', get_kind e x = get_kind (remove_var x' e) x.
+induction e. 
+* induction x'; simpl; trivial.
+* induction x; trivial. intros. simpl in *. apply IHe.
+* induction x'; intros; simpl;  trivial.
+Qed.
+  
+Lemma wf_typ_remove: forall t e n,wf_typ e t -> wf_typ (remove_var n e) t.
+induction t;firstorder.
+- simpl.
+  simpl in H.
+  rewrite <- get_kind_remove.
+  apply H.
+Qed.
+
+ 
+Lemma wf_env_remove: forall n e, wf_env e -> wf_env (remove_var n e).
+induction n.
+- induction e; firstorder. 
+- induction e; firstorder.
+  apply wf_typ_remove.
+  apply H.
+Qed.
+
+Lemma kind_remove : forall tp2 e k n', wf_env e -> kinding e tp2 k -> kinding (remove_var n' e) tp2 k.
+induction tp2; trivial; firstorder.
+- inversion H0. 
+  apply (kinded_var _ _ _ p).
+  rewrite <- H2.
+  symmetry.
+  apply get_kind_remove.
+  apply H3.
+  apply wf_env_remove.
+  exact H4.
+-inversion H0.
+ apply (kinded_arrow).
+ firstorder.
+ firstorder.
+- inversion H0.
+  apply kinded_fall.    
+  firstorder.
+Qed.
+
+
 Lemma subst_preserves_typing :
   forall (e : env) (x : nat) (t u : term) (V W : typ),
   typing e t V -> 
@@ -1099,7 +1160,6 @@ induction H; intros n' u W H1 E1.
         apply H4.
         apply (typing_wf_env (remove_var n' e) u W).
         apply H1.
-(*From typing*)
       * intro H3.
         apply typed_var.
 
@@ -1124,14 +1184,19 @@ induction H; intros n' u W H1 E1.
       apply H1.
   - simpl. apply typed_abs.
     apply (IHtyping  (S n') (shift u 0) W). trivial.
+    simpl.
     admit.
-    admit.
+    simpl.
+    apply E1.
   -exact (typed_app _ _ _ _ _ (IHtyping1 _ u W H1 E1) (IHtyping2 _ u W H1 E1)).
   - simpl; apply typed_dept. apply (IHtyping n' (shift_typ u 0) (tshift W 0)).
      * admit.
      * simpl; rewrite E1; trivial.
   - simpl. apply typed_applt with (1 := (IHtyping _ u W H1 E1)). 
-    admit. (*OBVIOUS*)
+    apply kind_remove.
+    apply (typing_wf_env e trm (fall k tp1)).
+    apply H.
+    apply H0.
 Qed.
 
 
