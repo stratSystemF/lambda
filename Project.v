@@ -1,3 +1,4 @@
+
 Require Import Arith.
 
 Require Import Le.
@@ -1025,6 +1026,52 @@ simpl in IHtyping.
 apply IHtyping.
 Qed.
 
+Lemma wf_typ_strengthening_var :
+  forall (e : env) (T U : typ),
+  wf_typ (v T e ) U -> wf_typ e U.
+intros e T U H; apply wf_typ_env_weaken with (2 := H); simpl; trivial.
+Qed.
+
+Lemma get_typ_wf :
+  forall (e : env) (n : nat) (T : typ),
+  wf_env e -> get_typ e n = Some T -> wf_typ e T.
+induction e; simpl.
+  - intros; discriminate.
+  - intros n' T H2 E; assert (H3 := IHe n); clear IHe.
+    induction (get_typ e n).
+      * simpl in *. injection E.
+simpl in E; injection E; clear E; intro E; rewrite <- E;
+        apply wf_typ_weakening_bound with (2 := H1); apply H3 with (1 := H2);
+        trivial.
+      * discriminate ] .
+Qed.
+
+
+Lemma typing_wf_typ : forall e u W, typing e u W -> wf_typ e W.
+Proof.
+induction 1;firstorder.
+- simpl;trivial.
+  induction e.
+  * intros. discriminate.
+  * generalize tp H0 H.
+    induction x.
+    + intuition. rewrite H2.
+
+- firstorder.
+   assert(wf_env (v tp1 e)).
+   apply (typing_wf_env _ trm1 tp2).
+   apply H.
+   simpl in H0.
+   apply H0.
+-  apply (wf_typ_strengthening_var _ tp1 _).
+   apply IHtyping.
+- simpl in *.
+
+
+Qed.
+
+
+
 Lemma get_remove : forall e n x , S x > n -> get_typ (remove_var n e) (x) = get_typ e (S x).
 Proof.
 induction e;induction n; induction x; trivial;firstorder.
@@ -1040,30 +1087,116 @@ induction e;induction n; induction x; trivial;firstorder.
 - omega.
 Qed.
 
-Lemma typ_remove : forall u e  W tp1 ,typing e u W  ->(wf_typ  e tp1) -> typing (v tp1 e) (shift u 0 ) W.
-induction u.
- * simpl. intuition.
-   apply typed_var.
-   simpl.
-   inversion H.
-   firstorder.
-   simpl.
-   firstorder.
-   apply (typing_wf_env e (var n) W).
-   apply H.
- * intuition.
-   simpl.
-   inversion H.
-   
-   apply (typed_abs).
-  
+Lemma get_remove_2 : forall e x  n , x < n ->get_typ e  x = get_typ (remove_var n e) x .
+Proof.
+induction e; trivial; intros x' n' H.
+- induction n'.
+  * inversion H.
+  * clear IHn'.
+    induction n; simpl;trivial.  rewrite (IHe x' (S n')). trivial. omega.
+- simpl.
+  induction x'; induction n'; trivial.
+  * omega.
+  * omega.
+  * firstorder.
+Qed. 
+
 Lemma get_kind_remove : forall e x x', get_kind e x = get_kind (remove_var x' e) x.
 induction e. 
 * induction x'; simpl; trivial.
 * induction x; trivial. intros. simpl in *. apply IHe.
 * induction x'; intros; simpl;  trivial.
 Qed.
+    
+Lemma wf_typ_add : forall t e n, wf_typ (remove_var n e) t -> wf_typ e t.
+Proof.
+induction t; firstorder.
+- simpl in *.
+  rewrite (get_kind_remove e n n0).
+  apply H.
+Qed.
   
+Lemma kinding_remove: forall u e n  W , wf_env e -> kinding (remove_var n e) u W -> kinding e u W.
+induction u.
+-intuition.
+ inversion H0.
+ apply (kinded_var _ _ _ p ).
+ rewrite (get_kind_remove _ _ n0).
+ apply H2.
+ apply H3.
+ apply H.
+- intuition.
+  inversion H0.
+  apply kinded_arrow.
+  apply (IHu1 e n _).
+  apply H.
+  apply H3.
+  apply (IHu2 e n _).
+  apply H.
+  apply H5.
+-intuition.
+ inversion H0.
+ apply kinded_fall.
+ apply (IHu _ n0 _).
+ simpl.
+ apply H.
+ simpl.
+ apply H4.
+Qed.
+
+Lemma typ_shift_remove: forall e u W n, wf_env e -> typing (remove_var n e) u W -> typing e (shift u n) W.
+(*To shift the first n variables is the same that to remove the n first variable of the
+environment,*)
+intuition.
+cut(exists e', e'= remove_var n e). (*Ce n'est pas comme assert! la coupure est ici nécessaire*)
+- intros. destruct H1. rewrite <- H1 in H0.
+  generalize n e H1 H. clear n e H H1.
+  induction H0.
+  * firstorder; apply typed_var. 
+    rewrite H1 in H.
+    simpl in *.
+    case (le_gt_dec n x).
+    + intros. rewrite <- (get_remove _ n). apply H. omega.
+    + intros. rewrite (get_remove_2 e0 x n). apply H.
+      omega.
+    + apply H2.
+  * intros. simpl.
+    apply typed_abs.
+    apply IHtyping.
+    rewrite H1.
+    trivial.  
+    simpl.
+    firstorder.
+    assert(wf_env (v tp1 e)).
+    apply (typing_wf_env (v tp1 e) trm1 tp2).
+    apply H0.
+    rewrite H1 in H2.
+    simpl in H2.
+    apply (wf_typ_add tp1 e0 n).
+    apply H2.
+  * intuition. simpl. apply (typed_app _ _ _ _ _ (IHtyping1 _ _ H1 H) (IHtyping2 _ _ H1 H)).
+  * intuition; simpl. 
+    apply typed_dept.
+    apply IHtyping.
+    rewrite H1.
+    trivial.
+    simpl.
+    apply H.
+  * intuition; simpl.
+    apply (typed_applt _ _ _ _ k).
+    apply IHtyping.
+    apply H1.
+    apply H2.
+    apply (kinding_remove _ _ n _ ).
+    apply H2.
+    rewrite <- H1.
+    apply H.
+- exists (remove_var n e); trivial.
+Qed.
+
+  
+
+
 Lemma wf_typ_remove: forall t e n,wf_typ e t -> wf_typ (remove_var n e) t.
 induction t;firstorder.
 - simpl.
@@ -1101,6 +1234,59 @@ induction tp2; trivial; firstorder.
 Qed.
 
 
+Lemma typing_weakening_var : (*Vouillon*)
+  forall (e : env) (t : term) (U V : typ),
+  wf_typ e V -> typing e t U -> typing (v V e ) (shift t 0) U.
+intros e t U V H1 H2; apply (typ_shift_remove (v V e));
+simpl; trivial; split; trivial. 
+apply (typing_wf_env e t U); firstorder.
+Qed.
+
+
+Lemma tshift_tsubst_prop_2 :
+  forall (n n' : nat) (T T' : typ),
+  (tshift  (tsubst T n T')(n + n') ) =
+  (tsubst (tshift  T (1 + n + n') ) n (tshift T' (n + n') )).
+admit.
+Qed.
+
+
+
+Lemma typing_weakening_bound_ind :
+  forall (e e' : env) (X : nat) (t : term) (U : typ),
+  insert_kind X e e' ->
+  typing e t U -> typing e' (shift_typ  t X) (tshift U X).
+intros e e' n t U H1 H2; generalize n e' H1; clear n e' H1;
+induction H2; intros n1 e' H1; simpl.
+  - apply typed_var.
+    + rewrite <-insert_kind_get_typ with (1:= H1). rewrite H; trivial. 
+    + exact (insert_kind_wf_env _ _ _ H1 H0).
+    
+  - apply typed_abs. apply IHtyping. apply insert_v. trivial.
+  - assert (H2 := (IHtyping1 _ _ H1)); assert (H3 := (IHtyping2 _ _ H1));
+    exact (typed_app _ _ _ _ _ H2 H3).
+  - apply typed_dept; apply IHtyping. apply insert_S_v_typ.
+    apply H1.
+  - rewrite (tshift_tsubst_prop_2 0 n1).
+    Check typed_applt.
+    apply (typed_applt _ _ _ _ k) .
+    apply IHtyping.
+    apply H1.
+    simpl.
+    Check insert_kind_kinding.
+    apply (insert_kind_kinding _ _ e _ _).
+    apply H1.
+    apply H.
+Qed.
+
+  
+Lemma typing_remove_vtyp: forall e u W kl,  wf_typ e W -> typing e u W -> typing (v_typ kl e) (shift_typ u 0) (tshift W 0). (*The good way is to generalize slightly, saying that e' is e with et new kind somewhere*)
+Proof.
+intros e t U V H1 H2; apply typing_weakening_bound_ind with (2 := H2).
+apply insert_0.
+Qed.
+
+
 Lemma subst_preserves_typing :
   forall (e : env) (x : nat) (t u : term) (V W : typ),
   typing e t V -> 
@@ -1128,36 +1314,39 @@ induction H; intros n' u W H1 E1.
         apply H1.
       * intro H3.
         apply typed_var.
-
-(* x>n' get_typ (remove_var n' e) (x-1) = get_typ e x*)      
         assert  (x = S (x-1)).
         omega.
         rewrite H4.
         simpl.
-   
-     rewrite get_remove.
-
+        rewrite get_remove.
         assert(x-1-0=x-1).
         omega.
-  
-      rewrite H5.
-      assert( S (x - 1)=x).
-      omega.
-      rewrite H6.
-      apply H.
-      omega.
-      apply (typing_wf_env (remove_var n' e) u W).
-      apply H1.
+        rewrite H5.
+        assert( S (x - 1)=x).
+        omega.
+        rewrite H6.
+        apply H.
+        omega.
+        apply (typing_wf_env (remove_var n' e) u W).
+        apply H1.
   - simpl. apply typed_abs.
     apply (IHtyping  (S n') (shift u 0) W). trivial.
     simpl.
-    admit.
+    assert(wf_env (v tp1 e)).
+    apply (typing_wf_env _ trm1 tp2).
+    apply H.
+    simpl in H0.
+    destruct H0.
+    assert (H3 := wf_typ_remove _ _ n' H0 ).    
+    apply typing_weakening_var;trivial.
     simpl.
     apply E1.
-  -exact (typed_app _ _ _ _ _ (IHtyping1 _ u W H1 E1) (IHtyping2 _ u W H1 E1)).
+  - exact (typed_app _ _ _ _ _ (IHtyping1 _ u W H1 E1) (IHtyping2 _ u W H1 E1)).
   - simpl; apply typed_dept. apply (IHtyping n' (shift_typ u 0) (tshift W 0)).
-     * admit.
-     * simpl; rewrite E1; trivial.
+     * simpl. apply typing_remove_vtyp;firstorder.
+       apply (typing_wf_typ _ u).
+       apply H1.
+* simpl; rewrite E1; trivial.
   - simpl. apply typed_applt with (1 := (IHtyping _ u W H1 E1)). 
     apply kind_remove.
     apply (typing_wf_env e trm (fall k tp1)).
