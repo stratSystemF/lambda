@@ -739,7 +739,7 @@ eapply insert_kind_wf_typ; eauto.
 apply insert_0.
 Qed.
 
-Lemma wf_typ_weakening_var_generalized :
+Lemma wf_typ_env_weaken :
   forall (T : typ) (e e' : env),
   (forall (X : nat), get_kind e' X = None -> get_kind e X = None) ->
   wf_typ e T -> wf_typ e' T.
@@ -758,7 +758,7 @@ Lemma wf_typ_weakening_var :
   wf_typ e T2 -> wf_typ (v T1 e) T2.
 Proof.
 intros.
-apply wf_typ_weakening_var_generalized with (e:= e); trivial.
+apply wf_typ_env_weaken with (e:= e); trivial.
 Qed.
 
 Lemma env_subst_get_bound_lt :
