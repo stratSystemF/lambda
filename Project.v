@@ -729,7 +729,6 @@ Inductive env_subst : nat -> typ -> env -> env -> Prop :=
 (* The subject is not clear but I think that having
    some weakening lemmas is required here too. *)
 
-
 Lemma get_kind_before :
   forall e X,
   get_kind e (S X) <> None ->
@@ -739,20 +738,7 @@ induction e; induction X; intros H; simpl in *; auto.
 discriminate.
 Qed.
 
-Lemma get_kind_before_rewritten :
-  forall e X,
-  get_kind e X <> None ->
-  get_kind e (X - 1) <> None.
-Proof.
-destruct X; simpl; intros H; trivial.
-rewrite Nat.sub_0_r.
-now apply get_kind_before.
-Qed.
-Print tsubst.
-
-
-
-
+(* Rewrite this *)
 (* The following lemmas are deeply inspired by Vouillon
    and even copy/paste for a part of it. *)
 Lemma wf_typ_env_weaken :
@@ -773,6 +759,24 @@ induction T; simpl; auto.
               intros; discriminate  ].
 Qed.
 
+Lemma wf_typ_weakening_v_typ :
+  forall (e : env) (T : typ) (X : nat),
+  wf_typ e T -> wf_typ (v_typ X e) (tshift T 0).
+Proof.
+intros.
+eapply insert_kind_wf_typ; eauto.
+apply insert_0.
+Qed.
+
+Lemma wf_typ_weakening_var :
+  forall (e : env) (T1 T2 : typ),
+  wf_typ e T2 -> wf_typ (v T1 e) T2.
+Proof.
+intros.
+apply wf_typ_env_weaken with (e:= e); trivial.
+Qed.
+
+(*
 Lemma wf_typ_extensionality : 
   forall (T : typ) (e e' : env),
   (forall (X : nat), get_kind e X = get_kind e' X) ->
@@ -781,10 +785,9 @@ Proof.
 intros T e e' H1 H2; apply wf_typ_env_weaken with (2 := H2);
 intros n H3; rewrite H1; trivial.
 Qed.
+*)
 
-
-
-Lemma myweakn : forall e' T k, wf_typ e' T -> wf_typ (v_typ k e') T.
+Lemma weakening_lemma_1 : forall e' T k, wf_typ e' T -> wf_typ (v_typ k e') T.
 Proof.
 assert (forall X e' k, get_kind (v_typ k e') X  = None -> get_kind  e' X = None).
 *induction X.
@@ -801,45 +804,62 @@ assert (forall X e' k, get_kind (v_typ k e') X  = None -> get_kind  e' X = None)
   apply H1.
 Qed.
 
-
-
-
-
-Lemma lt_perso : forall n x, n < x -> (exists y, y > 0 /\ x = n+y).  
-intuition.
-induction n.
-- exists x.
-  firstorder.
-- assert (n < x). 
-  omega.
-  firstorder.
-  exists (x0 -1).  
-  omega.
+Lemma env_subst_get_bound_lt :
+  forall (X X' : nat) (e e' : env) (T : typ),
+  (env_subst X' T e e') ->
+  X < X' ->
+  get_kind e' X = get_kind e X.
+intros n n' e e' T H; generalize n; clear n.
+induction H; simpl; trivial; intros n' H1; try omega.
+induction n'; trivial.
+apply IHenv_subst.
+omega.
 Qed.
 
+(*
+Lemma env_subst_get_bound_ge :
+  forall (X X' : nat) (e e' : env) (T : typ),
+  env_subst X' T e e' -> X' < X ->
+  get_bound e' (X - 1) = opt_map (fun T' => tsubst T' X' T) (get_bound e X).
+intros n n' e e' T H; generalize n; clear n;
+induction H; simpl; trivial; intros n' H1;
+  [ induction n';
+      [ inversion H1
+      | simpl; rewrite <- minus_n_O; case (get_bound e n'); simpl; trivial;
+        intro T''; apply f_equal with (f := @Some typ);
+        apply tsubst_tshift_prop ]
+  | induction n';
+      [ inversion H1
+      | clear IHn'; replace ((S n') - 1) with (S (n' - 1)); try omega;
+        rewrite IHenv_subst; try omega;
+        case (get_bound e n'); simpl; trivial; intro T'';
+        apply f_equal with (f := @Some typ);
+        apply (tshift_tsubst_prop_1 0 X) ] ].
+Qed.
+*)
 
 Lemma env_subst_wf_typ :
-  forall tp X T e e',
-  env_subst X T e e' ->
+  forall T1 X T2 e e',
+  env_subst X T2 e e' ->
   wf_env e' ->
-  wf_typ e tp ->
-  wf_typ e' (tsubst tp X T).
+  wf_typ e T1 ->
+  wf_typ e' (tsubst T1 X T2).
 Proof.
-induction tp.
-- unfold tshift. 
-  fold tshift.
-  intros X T e e' H1 Henv H2. (*HERE *)
-  admit.
-- firstorder.
-- firstorder.
-  simpl in * .
-  apply (IHtp _ (tshift T 0) (v_typ n e) _).
-  Print env_subst.
-  apply subst_Svtyp.
-  apply H.
-  simpl.
-  apply H0.
-  apply H1.
+induction T1.
++ simpl; intros.
+  destruct (eq_nat_dec X n).
+  - rewrite e0 in H; clear e0 X H1; revert H H0.
+    induction 1; simpl; intuition.
+    * now apply wf_typ_weakening_v_typ.
+    * now apply wf_typ_weakening_var.
+  - destruct (le_gt_dec n X); simpl.
+    * erewrite env_subst_get_bound_lt; eauto.
+      omega.
+    * admit. (* requires lemma env_subst_get_kind_ge *)
++ firstorder.
++ simpl; intros.
+  eapply IHT1; eauto.
+  eapply subst_Svtyp; eauto.
 Qed.
 
 Lemma env_subst_wf_env :
@@ -848,16 +868,13 @@ Lemma env_subst_wf_env :
   wf_env e ->
   wf_env e'.
 Proof.
-induction 1.
--firstorder. 
--firstorder. 
- eapply env_subst_wf_typ; eauto.
-- firstorder.
+induction 1; firstorder.
+eapply env_subst_wf_typ; eauto.
 Qed.
 
-(*Question 4*)
+(* Section 1.3.2 Term substitution *)
 
-
+(* TODO : move stuff here *)
 
 (*Partie 2*)
 
