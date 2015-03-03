@@ -729,15 +729,6 @@ Inductive env_subst : nat -> typ -> env -> env -> Prop :=
 (* The subject is not clear but I think that having
    some weakening lemmas is required here too. *)
 
-Lemma get_kind_before :
-  forall e X,
-  get_kind e (S X) <> None ->
-  get_kind e X <> None.
-Proof.
-induction e; induction X; intros H; simpl in *; auto.
-discriminate.
-Qed.
-
 (* Rewrite this *)
 (* The following lemmas are deeply inspired by Vouillon
    and even copy/paste for a part of it. *)
@@ -776,67 +767,32 @@ intros.
 apply wf_typ_env_weaken with (e:= e); trivial.
 Qed.
 
-(*
-Lemma wf_typ_extensionality : 
-  forall (T : typ) (e e' : env),
-  (forall (X : nat), get_kind e X = get_kind e' X) ->
-  wf_typ e T -> wf_typ e' T.
-Proof.
-intros T e e' H1 H2; apply wf_typ_env_weaken with (2 := H2);
-intros n H3; rewrite H1; trivial.
-Qed.
-*)
-
-Lemma weakening_lemma_1 : forall e' T k, wf_typ e' T -> wf_typ (v_typ k e') T.
-Proof.
-assert (forall X e' k, get_kind (v_typ k e') X  = None -> get_kind  e' X = None).
-*induction X.
-- simpl in *.
-  discriminate.
-- intros e k H.
-  induction e.
-  + easy.
-  + firstorder.
-  + firstorder.
-* intros e' T k H1.
-  apply (wf_typ_env_weaken T e' (v_typ k e')).
-  intro X. apply H.
-  apply H1.
-Qed.
-
 Lemma env_subst_get_bound_lt :
   forall (X X' : nat) (e e' : env) (T : typ),
   (env_subst X' T e e') ->
   X < X' ->
   get_kind e' X = get_kind e X.
-intros n n' e e' T H; generalize n; clear n.
-induction H; simpl; trivial; intros n' H1; try omega.
-induction n'; trivial.
+Proof.
+intros X X' e e' T H; revert X.
+induction H; simpl; trivial; intros X H1; try omega.
+induction X; trivial.
 apply IHenv_subst.
 omega.
 Qed.
 
-(*
-Lemma env_subst_get_bound_ge :
+Lemma env_subst_get_bound_gt :
   forall (X X' : nat) (e e' : env) (T : typ),
-  env_subst X' T e e' -> X' < X ->
-  get_bound e' (X - 1) = opt_map (fun T' => tsubst T' X' T) (get_bound e X).
-intros n n' e e' T H; generalize n; clear n;
-induction H; simpl; trivial; intros n' H1;
-  [ induction n';
-      [ inversion H1
-      | simpl; rewrite <- minus_n_O; case (get_bound e n'); simpl; trivial;
-        intro T''; apply f_equal with (f := @Some typ);
-        apply tsubst_tshift_prop ]
-  | induction n';
-      [ inversion H1
-      | clear IHn'; replace ((S n') - 1) with (S (n' - 1)); try omega;
-        rewrite IHenv_subst; try omega;
-        case (get_bound e n'); simpl; trivial; intro T'';
-        apply f_equal with (f := @Some typ);
-        apply (tshift_tsubst_prop_1 0 X) ] ].
+  env_subst X' T e e' ->
+  X' < X ->
+  get_kind e' (X - 1) = get_kind e X.
+Proof.
+intros X X' e e' T H; revert X.
+induction H; simpl; trivial; intros X H1.
++ induction X; simpl; trivial.
+  destruct (X - 0) eqn:eq; try omega.
+  rewrite <- IHenv_subst; try (apply f_equal); omega.
++ induction X; try (apply f_equal); try omega.
 Qed.
-*)
 
 Lemma env_subst_wf_typ :
   forall T1 X T2 e e',
@@ -855,7 +811,7 @@ induction T1.
   - destruct (le_gt_dec n X); simpl.
     * erewrite env_subst_get_bound_lt; eauto.
       omega.
-    * admit. (* requires lemma env_subst_get_kind_ge *)
+    * erewrite env_subst_get_bound_gt; eauto.
 + firstorder.
 + simpl; intros.
   eapply IHT1; eauto.
