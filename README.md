@@ -34,14 +34,15 @@ Induction on inductive predicates often comes in handy. That makes inductive
 predicates a lot more powerful than functions to Prop defined with Fixpoint.
 
 There are other advantages to inductive predicates: for instance the ability
-of just applying one of the constructs if you know that's was the one that
+of just applying one of the constructs if you know that's the one that
 was used. With Fixpoint definitions, you always have to consider all the
 branches of the pattern matching.
 
 We sometimes wondered why not all our functions were inductive predicates (for
 instance get_kind) but we didn't go all the way to make the change because:
-1) It would have taken too much time.
-2) We thought that since Vouillon and the subject choose to do differently,
+
+1. It would have taken too much time.
+2. We thought that since Vouillon and the subject choose to do differently,
 there might be reasons to it.
 
 ##Kind and type inference
@@ -55,14 +56,15 @@ already so we had to move on.
 ##Type and term substitution
 
 The difficulties laid:
-1) In expressing correctly the theorems, especially because of De Bruijn indices;
-2) In proving them because we needed tons of lemmas that the subject
+
+1. In expressing correctly the theorems, especially because of De Bruijn indices;
+2. In proving them because we needed tons of lemmas that the subject
 nor the article provided.
 Even on paper, these lemmas were important and hard to find.
 In fact, all the information we needed was in Vouillon proof scripts but they were
 really hard to understand (almost offuscated it seemed to us).
-Thus a large part of our work was understanding and adapting a lot of lemmas and
-proofs from Vouillon.
+Thus a large part of our work was understanding and adapting (even simplifying)
+a lot of lemmas and proofs from Vouillon.
 Fortunately, most of the time the lemma statements needn't change.
 Changes were required when the lemmas were about kinds (because this was the main
 difference between the system we studied and the system Vouillon studied).
@@ -77,7 +79,10 @@ The syntax is strange and we need to know a lot of different constructions so th
 we are able to move forward.
 
 We hadn't a clear understanding of the various automation tactics (trivial, easy,
-auto, eauto, intuition, firstorder).
+auto, eauto, intuition, firstorder). On the contrary omega is very understandable
+but it doesn't deal with max so at start we did a lot of proofs by ourselves
+searching and using standard lemmas, until we found the lia tactic which deals
+with max (but is sometimes buggy).
 
 Sometimes, we would like to do proofs in a more direct style but Coq does not make
 that easy. At last, we found the trick "specialize H1 with (1 := H2)" for that sort
