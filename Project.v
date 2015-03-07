@@ -45,6 +45,7 @@ Fixpoint tshift (t:typ) (v:nat) : typ :=
 Lemma tshift_lemma_1 :
   forall (T : typ) (X Y : nat),
   tshift (tshift T X) (S (X + Y)) = tshift (tshift T (X + Y)) X.
+Proof.
 induction T; intros X Y.
 + unfold tshift.
   destruct (le_gt_dec (S (X + Y)));
@@ -79,6 +80,7 @@ Lemma tsubst_lemma_1 :
   forall (T T' : typ) (X Y : nat),
   (tshift (tsubst T X T') (X + Y)) =
   (tsubst (tshift T (S (X + Y))) X (tshift T' (X + Y))).
+Proof.
 induction T; intros T' X Y.
 + unfold tshift; unfold tsubst; fold tshift; fold tsubst.
   destruct (le_gt_dec (S (X + Y)) n).
@@ -776,6 +778,7 @@ Qed.
 Lemma get_typ_wf :
   forall (e : env) (n : nat) (T : typ),
   wf_env e -> get_typ e n = Some T -> wf_typ e T.
+Proof.
 induction e; simpl; intuition; try discriminate.
 + destruct (get_typ e n0) eqn:eq; try discriminate.
   simpl in H0.
@@ -1066,6 +1069,7 @@ Qed.
 Lemma wf_typ_strengthening_var :
   forall (e : env) (T U : typ),
   wf_typ (v T e ) U -> wf_typ e U.
+Proof.
 intros e T U H; apply wf_typ_env_weaken with (2 := H); simpl; trivial.
 Qed.
 
@@ -1099,7 +1103,8 @@ induction e; trivial; intros x' n' H.
 Qed. 
 
 Lemma get_kind_remove : forall e x x', get_kind e x = get_kind (remove_var x' e) x.
-induction e. 
+Proof.
+induction e.
 * induction x'; simpl; trivial.
 * induction x; trivial. intros. simpl in *. apply IHe.
 * induction x'; intros; simpl;  trivial.
@@ -1114,6 +1119,7 @@ induction t; firstorder.
 Qed.
   
 Lemma kinding_remove: forall u e n  W , wf_env e -> kinding (remove_var n e) u W -> kinding e u W.
+Proof.
 induction u.
 -intuition.
  inversion H0.
@@ -1144,6 +1150,7 @@ Qed.
 Lemma typ_shift_remove: forall e u W n, wf_env e -> typing (remove_var n e) u W -> typing e (shift u n) W.
 (*To shift the first n variables is the same that to remove the n first variable of the
 environment,*)
+Proof.
 intuition.
 cut(exists e', e'= remove_var n e). (*Ce n'est pas comme assert! la coupure est ici nécessaire*)
 - intros. destruct H1. rewrite <- H1 in H0.
@@ -1195,6 +1202,7 @@ Qed.
 
 
 Lemma wf_typ_remove: forall t e n,wf_typ e t -> wf_typ (remove_var n e) t.
+Proof.
 induction t;firstorder.
 - simpl.
   simpl in H.
@@ -1204,6 +1212,7 @@ Qed.
 
  
 Lemma wf_env_remove: forall n e, wf_env e -> wf_env (remove_var n e).
+Proof.
 induction n.
 - induction e; firstorder. 
 - induction e; firstorder.
@@ -1212,6 +1221,7 @@ induction n.
 Qed.
 
 Lemma kind_remove : forall tp2 e k n', wf_env e -> kinding e tp2 k -> kinding (remove_var n' e) tp2 k.
+Proof.
 induction tp2; trivial; firstorder.
 - inversion H0. 
   apply (kinded_var _ _ _ p).
@@ -1233,6 +1243,7 @@ Qed.
 Lemma typing_weakening_var : (*Vouillon*)
   forall (e : env) (t : term) (U V : typ),
   wf_typ e V -> typing e t U -> typing (v V e ) (shift t 0) U.
+Proof.
 intros e t U V H1 H2; apply (typ_shift_remove (v V e));
 simpl; trivial; split; trivial. 
 apply (typing_wf_env e t U); firstorder.
@@ -1242,6 +1253,7 @@ Lemma typing_weakening_bound_ind :
   forall (e e' : env) (X : nat) (t : term) (U : typ),
   insert_kind X e e' ->
   typing e t U -> typing e' (shift_typ  t X) (tshift U X).
+Proof.
 intros e e' n t U H1 H2; generalize n e' H1; clear n e' H1;
 induction H2; intros n1 e' H1; simpl.
   - apply typed_var.
