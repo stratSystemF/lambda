@@ -18,23 +18,21 @@ Local Open Scope nat_scope.
 
 Inductive typ := 
 | vart : nat -> typ
-(** The latter nat is the de Brujin index of the type variable. *)
+(* The latter nat is the de Brujin index of the type variable. *)
 | arrow : typ -> typ -> typ
 | fall : nat -> typ -> typ.
+(* The latter nat is the kind of the type which is abstracted. *)
 
+(** The environment is a stack of values.                                   *)
+(** If a term has v bounded variables then they are reprensented by
+    de Brujin indexes 0..v-1. From index v and on, the de Brujin indexes
+    represent the free variables - that must appear in the environment then -
+    v being the top of the stack                                            *)
 
-(** The latter nat is the kind of the type which is abstracted. *)
-
-(** The environment is a stack of values *
- * If a term has v bounded variables then they are reprensented by
- * de Brujin indexes 0..v-1. From index v and on, the de Brujin indexes
- * represent the free variables - that must appear in the environment then -
- * v being the top of the stack
- *)
-
-(** The following function shifts the free type variables by one within the type t.
- * v is the number of bounded variables - ie number of type abstractions - in t.
- *)
+(** The following function shifts the free type variables
+    by one within the type t.                             *)
+(** v is the number of bounded variables
+    - ie number of type abstractions - in t.              *)
 Fixpoint tshift (t:typ) (v:nat) : typ := 
   match t with
     | vart i   =>  vart (if le_gt_dec v i then 1 + i else i  )
@@ -57,19 +55,18 @@ Proof.
     apply IHT with (X := S X).
 Qed.
 
-(** The following function substitutes the type variable number v by newt inside t.
- * It is assumed that v is removed from the environment stack
- * and, as always, it is assumed that v does not appear in newt.
- *)
-
+(** The following function substitutes the type variable number v
+    by newt inside t.                                              *)
+(** It is assumed that v is removed from the environment stack
+    and, as always, it is assumed that v does not appear in newt.  *)
 Fixpoint tsubst (t:typ) (v:nat) (newt:typ) : typ := 
   match t with
-    | vart l => (**several cases*)
+    | vart l => (*several cases*)
       if eq_nat_dec v l then
-        newt (**That's the variable to substitue*)
-      else if le_gt_dec l v then (**That's a variable before the target variable*) 
+        newt (*That's the variable to substitue*)
+      else if le_gt_dec l v then (*That's a variable before the target variable*) 
              vart l
-           else (** That's a free variable, but we have a hole (we removed the variable)
+           else (* That's a free variable, but we have a hole (we removed the variable)
                  * so we need to garbage collect the name of this variable. *)
              vart (l-1)               
     | arrow t1 t2 => arrow (tsubst t1 v newt) (tsubst t2 v newt)
@@ -110,17 +107,18 @@ Qed.
 
 Inductive term :=
 | var : nat -> term
-(** The latter nat is the de Brujin index of the term variable. *)
+(* The latter nat is the de Brujin index of the term variable. *)
 | abs : typ -> term -> term
-(** The latter typ is the type of the term which is abstracted. *)
+(* The latter typ is the type of the term which is abstracted. *)
 | app : term -> term -> term
 | dept : nat -> term -> term
-(** The latter nat is the kind of the type which is abstracted. *)
+(* The latter nat is the kind of the type which is abstracted. *)
 | applt: term -> typ -> term.
 
-(** The following function shifts the free term variables by one within the term t.
- * v is the number of bounded variables - ie number of lambda abstractions - in t.
- *)
+(** The following function shifts the free term variables
+    by one within the term t.                             *)
+(** v is the number of bounded variables
+    - ie number of lambda abstractions - in t.            *)
 Fixpoint shift (t:term) (v:nat) : term :=
   match t with
     | var i   =>  var (if le_gt_dec v i then 1 + i else i  )
@@ -130,9 +128,10 @@ Fixpoint shift (t:term) (v:nat) : term :=
     | applt trm tp =>  applt (shift trm v) tp
   end.
 
-(** The following function shifts the free type variables by one within the term t.
- * v is the number of bounded variables - ie number of type abstractions - in t.
- *)
+(** The following function shifts the free type variables
+    by one within the term t.                             *)
+(** v is the number of bounded variables
+    - ie number of type abstractions - in t.              *)
 Fixpoint shift_typ (t:term) (v:nat) : term :=
   match t with
     | var i   => var i
@@ -141,38 +140,38 @@ Fixpoint shift_typ (t:term) (v:nat) : term :=
     | dept i trm => dept i (shift_typ trm (1 + v)) 
     | applt trm tp =>  applt (shift_typ trm v) (tshift tp v)
   end.
-(** The following function substitutes the type variable number v by newt inside t.
- * It is assumed that v is removed from the environment stack
- * and, as always, it is assumed that v does not appear in newt.
- *)
-(**TODO This functions seems reversed now*)
+
+(** The following function substitutes the type variable number v
+    by newt inside t.                                             *)
+(** It is assumed that v is removed from the environment stack
+    and, as always, it is assumed that v does not appear in newt. *)
 Fixpoint subst_typ (trm:term) (v:nat) (newt:typ) := 
   match trm with
     | var l => var l 
     | abs tp trm => abs (tsubst tp v newt) (subst_typ trm v newt)
     | app trm1 trm2 => app (subst_typ trm1 v newt) (subst_typ trm2 v newt)
     | dept i trm => dept i (subst_typ trm (1 + v) (tshift newt 0))
-    (**We need to bound FTV correctly, so we shift each time we cross a forall*)
+    (*We need to bound FTV correctly, so we shift each time we cross a forall*)
     | applt trm tp => applt (subst_typ trm v newt) (tsubst tp v newt)
   end.
 
-(** The following function substitutes the term variable number v by newt inside t.
- * It is assumed that v is removed from the environment stack
- * and, as always, it is assumed that v does not appear in newt.
- *)
+(** The following function substitutes the term variable number v
+    by newt inside t.                                             *)
+(** It is assumed that v is removed from the environment stack
+    and, as always, it is assumed that v does not appear in newt. *)
 Fixpoint subst (trm:term) (v:nat) (newt:term) :=
   match trm with
     | var l =>
       if eq_nat_dec l v then newt
-      else if le_gt_dec l v then (**That's a variable before the target variable*) 
+      else if le_gt_dec l v then (*That's a variable before the target variable*) 
              var l
-           else (** That's a free variable, but we have a hole (we removed the variable)
+           else (* That's a free variable, but we have a hole (we removed the variable)
                  * so we need to garbage collect the name of this variable. *)
              var (l-1)
     | abs tp trm => abs tp (subst trm (1 + v) (shift newt 0))
     | app trm1 trm2 => app (subst trm1 v newt) (subst trm2 v newt)
     | dept i trm => dept i (subst trm v (shift_typ newt 0))
-    (** We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
+    (* We need to shift FTV inside newt, to bound FTV correctly under new forallT *)
     | applt trm tp => applt (subst trm v newt) tp
   end.
 
@@ -181,26 +180,23 @@ Fixpoint subst (trm:term) (v:nat) (newt:term) :=
 Require Import List.
 Import ListNotations.
 
-(** We use an array indexed by de Bruinj indexes - a stack -
- * It can contain two sorts of info: the type of a term variable
- * or the kind of a type variable
- *)
-
+(** We use an array indexed by de Bruinj indexes - a stack -.    *)
+(** It can contain two sorts of info: the type of a term variable
+    or the kind of a type variable.                              *)
 Inductive env :=
 | empty : env
 | v_typ : nat -> env -> env
-(** The latter nat is a kind. *)
+(* The latter nat is a kind. *)
 | v : typ -> env -> env.
-
 
 Definition map_under_option (A B : Set) (f: A -> B) (x: option A):=
   match x with 
     | Some x => Some (f x)
     | None => None
   end.
+
 (** The following function is used to get the type of the term variable
- * of index i in the environment e.
- *)
+    of index i in the environment e. *)
 Fixpoint get_typ e (i:nat) :=
   match e with
     | empty => None               
@@ -212,9 +208,7 @@ Fixpoint get_typ e (i:nat) :=
   end.
 
 (** The following function is used to get the kind of the type variable
- * of index i in the environment e.
- *)
-
+    of index i in the environment e. *)
 Fixpoint get_kind e (i:nat) :=
   match e with
     | empty => None
@@ -222,7 +216,6 @@ Fixpoint get_kind e (i:nat) :=
                        | 0 => Some k
                        | S x => get_kind tl x 
                      end)
-
     | v t tl => get_kind tl i
   end.
 
@@ -345,7 +338,7 @@ Proof.
 Qed.
 
 (** This result was not required by the subject.
- * But at first we had understood it was, so here it is *)
+    But at first we had understood it was, so here it is *)
 Theorem completeness_of_kind :
   forall tp e k, (kinding e tp k) -> (exists p, p<=k /\ kind e tp = Some p).
 Proof.
@@ -409,10 +402,9 @@ Proof.
   induction 1; simpl in *; intuition.
 Qed.
 
-(** eq_typ is the decidable equality of types
-   this is a strict inductive equality *)
-(** We now know that there are cleaner ways of doing that.
- * We will rewrite if we have enough time. *)
+(** eq_typ is the boolean structural equality of types. *)
+(** We now know that there are cleaner ways of doing that
+    like a decidable equality. *)
 Fixpoint eq_typ t1 t2 : bool :=
   match (t1 , t2) with
     | (vart x , vart y) => beq_nat x y
@@ -461,7 +453,7 @@ Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
     | var x => if wf_env_bool e then get_typ e x else None
     | abs tp1 trm1 => 
-      match kind e tp1 with (**This match is not necessary but it is an historical artefact.*)
+      match kind e tp1 with (*This match is not necessary but it is an historical artefact.*)
         | Some a =>
           match type (v tp1 e) trm1  with 
             | None => None 
@@ -580,7 +572,7 @@ Qed.
 (** Question 1 *)
 
 (** insert_kind X e e' characterizes e' as being the extension of
- * e by a kinding declaration for variable X *)
+    e by a kinding declaration for variable X *)
 Inductive insert_kind : nat -> env -> env -> Prop :=
 | insert_0 : forall k e,
                insert_kind 0 e (v_typ k e)
@@ -640,7 +632,7 @@ Lemma insert_kind_wf_env :
   forall (X : nat) (e e' : env),
     insert_kind X e e' -> wf_env e -> wf_env e'.
 Proof.
-  induction 1; simpl; auto. (**Induction on insert_kind*)
+  induction 1; simpl; auto. (*Induction on insert_kind*)
   intros [T E];split; [apply (insert_kind_wf_typ _ _ e _); eauto | eauto].
 Qed.
 
@@ -726,23 +718,23 @@ Qed.
 (** Question 3 *)
 
 Inductive env_subst : nat -> typ -> env -> env -> Prop := 
-| subst_Svtyp: (**under the constructors*)
+| subst_Svtyp: (*under the constructors*)
     forall e e' n k T,
-      (**wf_typ e' T ->*)
+      (*wf_typ e' T ->*)
       env_subst n T e e' ->
       env_subst (S n) (tshift T 0) (v_typ k e) (v_typ k e')   
-| subst_SV: (**Substitute from the end to the beginning*)
+| subst_SV: (*Substitute from the end to the beginning*)
     forall e e' n T tp,
-      (**wf_typ e' T ->*)
+      (*wf_typ e' T ->*)
       env_subst n T e e' ->
       env_subst n T (v tp e) (v (tsubst tp n T) e')
-| substv: (**We need to substitue in e*)
+| substv: (*We need to substitue in e*)
     forall e k T,
       wf_typ e T ->
       env_subst 0 T (v_typ k e) e.
 
 (** The subject does not clearly ask for it
- * but we'll prove some weakening lemmas. *)
+    but we'll prove some weakening lemmas. *)
 
 Lemma wf_typ_weakening_v_typ :
   forall (e : env) (T : typ) (X : nat),
@@ -892,18 +884,18 @@ Inductive oneStep : relation term :=
 | redTerm : forall (phi:typ) t (t':term), oneStep (Top.app (abs phi t) t') (subst t' 0  t)
 | redUnderAbs : forall phi t t', oneStep t t' -> oneStep (abs phi t) (abs phi t')
 | redUnderAbst : forall k t t', oneStep t t' -> oneStep (dept k t) (dept k t')
-(**We can do one parallelApp or two AppLeft AppRight. It's equivalent, but the second solution is
+(*We can do one parallelApp or two AppLeft AppRight. It's equivalent, but the second solution is
 easier for the proofs*)
 | parallelApp : forall t t' s s', oneStep t t' -> oneStep s s' -> oneStep (Top.app t s) (Top.app t' s')
 | redUnderAppt : forall t t' phi, oneStep t t' -> oneStep (applt t phi) (applt t' phi)
-| id : forall t, oneStep t t. (**TODO This is a choice, we could regret it later*)
+| id : forall t, oneStep t t. (*TODO This is a choice, we could regret it later*)
 
 Require Import Relation_Operators.
 
 Definition reduction (t:term) (t':term) : Prop :=
   clos_trans term oneStep t t'.
 
-(**We could probably factorize the following proofs*)
+(*We could probably factorize the following proofs*)
 Lemma congruAbs : forall t t' phi, reduction t t' -> reduction (abs phi t) (abs phi t').
 Proof.
   intuition.
@@ -931,7 +923,7 @@ Proof.
   - apply t_trans with (y:= applt y phi); firstorder.
 Qed.
 
-(**We split in two lemmas, then we will merge the lemmas*)
+(*We split in two lemmas, then we will merge the lemmas*)
 Lemma congruAppL : forall t t' s, reduction t t' -> reduction (Top.app t s) (Top.app t' s).
 Proof.
   intuition.
@@ -974,7 +966,7 @@ with neutral : term -> Prop :=
      | nApp: forall t t', neutral t -> normal t' -> neutral (Top.app t t').
 
 
-(**Un terme neutre est un temre qui n'est pas une abstraction.*)
+(*Un terme neutre est un temre qui n'est pas une abstraction.*)
 
 
 Lemma normalPreservation : forall t n phi, (normal t -> normal (subst_typ t n phi)) /\ (neutral t -> neutral (subst_typ t n phi)). 
@@ -1147,12 +1139,12 @@ Proof.
    apply H4.
 Qed.
 
-Lemma typ_shift_remove: forall e u W n, wf_env e -> typing (remove_var n e) u W -> typing e (shift u n) W.
 (**To shift the first n variables is the same that to remove the n first variable of the
-environment,*)
+environment*)
+Lemma typ_shift_remove: forall e u W n, wf_env e -> typing (remove_var n e) u W -> typing e (shift u n) W.
 Proof.
   intuition.
-  cut(exists e', e'= remove_var n e). (**Ce n'est pas comme assert! la coupure est ici nécessaire*)
+  cut(exists e', e'= remove_var n e). (*Ce n'est pas comme assert! la coupure est ici nécessaire*)
   - intros. destruct H1. rewrite <- H1 in H0.
     generalize n e H1 H. clear n e H H1.
     induction H0.
@@ -1198,9 +1190,6 @@ Proof.
   - exists (remove_var n e); trivial.
 Qed.
 
-
-
-
 Lemma wf_typ_remove: forall t e n,wf_typ e t -> wf_typ (remove_var n e) t.
 Proof.
   induction t;firstorder.
@@ -1240,7 +1229,8 @@ Proof.
     firstorder.
 Qed.
 
-Lemma typing_weakening_var : (**Vouillon*)
+(**From Vouillon*)
+Lemma typing_weakening_var :
   forall (e : env) (t : term) (U V : typ),
     wf_typ e V -> typing e t U -> typing (v V e ) (shift t 0) U.
 Proof.
@@ -1354,6 +1344,5 @@ Qed.
 Lemma typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
     wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
-Proof.
 
-  (** Do the same for kinding weakening and preservation*)
+(** Do the same for kinding weakening and preservation*)
