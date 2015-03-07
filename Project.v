@@ -261,6 +261,21 @@ Fixpoint wf_env (e : env) : Prop :=
     | v_typ T e => wf_env e
   end.
 
+Lemma get_typ_wf :
+  forall (e : env) (n : nat) (T : typ),
+  wf_env e -> get_typ e n = Some T -> wf_typ e T.
+admit.
+(*induction e; simpl.
+  - intros; discriminate.
+  - intros n' T H2 E; assert (H3 := IHe n); clear IHe.
+    induction (get_typ e n).
+      * simpl in *. injection E.
+simpl in E; injection E; clear E; intro E; rewrite <- E;
+        apply wf_typ_weakening_bound with (2 := H1); apply H3 with (1 := H2);
+        trivial.
+      * discriminate ] .*)
+Qed.
+
 Fixpoint wf_env_bool (e : env) : bool :=
   match e with
     | empty     => true
@@ -394,6 +409,33 @@ Inductive typing : env -> term -> typ -> Prop :=
                   kinding e tp2 k ->
                   typing e (applt trm tp2) (tsubst tp1 0 tp2)
 .
+
+
+Lemma typing_wf_typ : forall e u W, typing e u W -> wf_typ e W.
+Proof.
+admit.
+(*
+induction 1;firstorder.
+- simpl;trivial.
+  induction e.
+  * intros. discriminate.
+  * generalize tp H0 H.
+    induction x.
+    + intuition. rewrite H2.
+
+- firstorder.
+   assert(wf_env (v tp1 e)).
+   apply (typing_wf_env _ trm1 tp2).
+   apply H.
+   simpl in H0.
+   apply H0.
+-  apply (wf_typ_strengthening_var _ tp1 _).
+   apply IHtyping.
+- simpl in *.
+*)
+
+Qed.
+
 
 (* eq_typ is the decidable equality of types
    this is a strict inductive equality *)
@@ -1032,46 +1074,6 @@ Lemma wf_typ_strengthening_var :
 intros e T U H; apply wf_typ_env_weaken with (2 := H); simpl; trivial.
 Qed.
 
-Lemma get_typ_wf :
-  forall (e : env) (n : nat) (T : typ),
-  wf_env e -> get_typ e n = Some T -> wf_typ e T.
-induction e; simpl.
-  - intros; discriminate.
-  - intros n' T H2 E; assert (H3 := IHe n); clear IHe.
-    induction (get_typ e n).
-      * simpl in *. injection E.
-simpl in E; injection E; clear E; intro E; rewrite <- E;
-        apply wf_typ_weakening_bound with (2 := H1); apply H3 with (1 := H2);
-        trivial.
-      * discriminate ] .
-Qed.
-
-
-Lemma typing_wf_typ : forall e u W, typing e u W -> wf_typ e W.
-Proof.
-induction 1;firstorder.
-- simpl;trivial.
-  induction e.
-  * intros. discriminate.
-  * generalize tp H0 H.
-    induction x.
-    + intuition. rewrite H2.
-
-- firstorder.
-   assert(wf_env (v tp1 e)).
-   apply (typing_wf_env _ trm1 tp2).
-   apply H.
-   simpl in H0.
-   apply H0.
--  apply (wf_typ_strengthening_var _ tp1 _).
-   apply IHtyping.
-- simpl in *.
-
-
-Qed.
-
-
-
 Lemma get_remove : forall e n x , S x > n -> get_typ (remove_var n e) (x) = get_typ e (S x).
 Proof.
 induction e;induction n; induction x; trivial;firstorder.
@@ -1233,7 +1235,6 @@ induction tp2; trivial; firstorder.
   firstorder.
 Qed.
 
-
 Lemma typing_weakening_var : (*Vouillon*)
   forall (e : env) (t : term) (U V : typ),
   wf_typ e V -> typing e t U -> typing (v V e ) (shift t 0) U.
@@ -1241,16 +1242,6 @@ intros e t U V H1 H2; apply (typ_shift_remove (v V e));
 simpl; trivial; split; trivial. 
 apply (typing_wf_env e t U); firstorder.
 Qed.
-
-
-Lemma tshift_tsubst_prop_2 :
-  forall (n n' : nat) (T T' : typ),
-  (tshift  (tsubst T n T')(n + n') ) =
-  (tsubst (tshift  T (1 + n + n') ) n (tshift T' (n + n') )).
-admit.
-Qed.
-
-
 
 Lemma typing_weakening_bound_ind :
   forall (e e' : env) (X : nat) (t : term) (U : typ),
@@ -1267,13 +1258,11 @@ induction H2; intros n1 e' H1; simpl.
     exact (typed_app _ _ _ _ _ H2 H3).
   - apply typed_dept; apply IHtyping. apply insert_S_v_typ.
     apply H1.
-  - rewrite (tshift_tsubst_prop_2 0 n1).
-    Check typed_applt.
+  - rewrite (tsubst_lemma_1 _ _ 0 n1).
     apply (typed_applt _ _ _ _ k) .
     apply IHtyping.
     apply H1.
     simpl.
-    Check insert_kind_kinding.
     apply (insert_kind_kinding _ _ e _ _).
     apply H1.
     apply H.
