@@ -49,6 +49,10 @@ qu'on aurait gagné du temps (it would have taken too much time.)
 2. We thought that since Vouillon and the subject choose to do differently,
 there might be reasons to it.
 
+We chose De Bruinj index because it was recommended, it was a little bit
+painful, but it seems that it is because the problem is intrinsically painful. 
+
+
 ##Kind and type inference
 
 Explain why it was difficult
@@ -110,11 +114,25 @@ Sometimes, we would like to do proofs in a more direct style but Coq does not ma
 that easy. At last, we found the trick "specialize H1 with (1 := H2)" for that sort
 of things.
 
-Actually it was quite 
 
 ##Conclusion
 
-TODO
+Severals time we had the feeling that we were playing a game, without knowing the
+actual rules: the existing keywords we could use. Our learning of Coq was driven
+by what we thought we need, so we read Coq code and parts of the Coq'Art, we asked strong people how to
+do some stuff, we tried other stuffs. It was a kind of chaotical experience.
+
+There are several things which are not satisfying in our code : the style is not
+uniform (we did not find our style), the lemmas are chaotically organized (but
+that will probably change before the presentation), we probably missed some big
+shortcuts... If we should redo the project now, it would be a lot easier, with
+the basics of Coqs.
+
+
+
+
+ 
+
 
 
 
