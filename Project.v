@@ -261,21 +261,6 @@ Fixpoint wf_env (e : env) : Prop :=
     | v_typ T e => wf_env e
   end.
 
-Lemma get_typ_wf :
-  forall (e : env) (n : nat) (T : typ),
-  wf_env e -> get_typ e n = Some T -> wf_typ e T.
-admit.
-(*induction e; simpl.
-  - intros; discriminate.
-  - intros n' T H2 E; assert (H3 := IHe n); clear IHe.
-    induction (get_typ e n).
-      * simpl in *. injection E.
-simpl in E; injection E; clear E; intro E; rewrite <- E;
-        apply wf_typ_weakening_bound with (2 := H1); apply H3 with (1 := H2);
-        trivial.
-      * discriminate ] .*)
-Qed.
-
 Fixpoint wf_env_bool (e : env) : bool :=
   match e with
     | empty     => true
@@ -801,6 +786,20 @@ Lemma wf_typ_weakening_var :
 Proof.
 intros.
 apply wf_typ_env_weaken with (e:= e); trivial.
+Qed.
+
+Lemma get_typ_wf :
+  forall (e : env) (n : nat) (T : typ),
+  wf_env e -> get_typ e n = Some T -> wf_typ e T.
+induction e; simpl; intuition; try discriminate.
++ destruct (get_typ e n0) eqn:eq; try discriminate.
+  simpl in H0.
+  inversion H0.
+  apply wf_typ_weakening_v_typ.
+  eauto.
++ apply wf_typ_weakening_var.
+  destruct n; eauto.
+  inversion H0 as [h0]; rewrite <- h0; auto.
 Qed.
 
 Lemma env_subst_get_bound_lt :
