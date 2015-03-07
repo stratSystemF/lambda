@@ -294,6 +294,13 @@ Inductive kinding (e : env) : typ -> nat -> Prop :=
                   kinding e (fall k1 tp1) (1 + max p k1)
 .
 
+Lemma kinding_wf_typ : forall e tp k, kinding e tp k -> wf_typ e tp.
+Proof.
+induction 1; simpl in *; intuition.
+rewrite H in H2.
+discriminate.
+Qed.
+
 (* Kind inference *)
 (* This function computes the minimal kind for a type term *)
 Fixpoint kind (e : env) (tp : typ) : (option nat) :=
@@ -395,32 +402,10 @@ Inductive typing : env -> term -> typ -> Prop :=
                   typing e (applt trm tp2) (tsubst tp1 0 tp2)
 .
 
-
-Lemma typing_wf_typ : forall e u W, typing e u W -> wf_typ e W.
+Lemma typing_wf_env : forall e trm tp, typing e trm tp -> wf_env e.
 Proof.
-admit.
-(*
-induction 1;firstorder.
-- simpl;trivial.
-  induction e.
-  * intros. discriminate.
-  * generalize tp H0 H.
-    induction x.
-    + intuition. rewrite H2.
-
-- firstorder.
-   assert(wf_env (v tp1 e)).
-   apply (typing_wf_env _ trm1 tp2).
-   apply H.
-   simpl in H0.
-   apply H0.
--  apply (wf_typ_strengthening_var _ tp1 _).
-   apply IHtyping.
-- simpl in *.
-*)
-
+induction 1; simpl in *; intuition.
 Qed.
-
 
 (* eq_typ is the decidable equality of types
    this is a strict inductive equality *)
@@ -853,6 +838,25 @@ induction T1.
   eapply subst_Svtyp; eauto.
 Qed.
 
+Lemma typing_wf_typ : forall e u W, typing e u W -> wf_typ e W.
+Proof.
+induction 1; intuition.
++ eapply get_typ_wf; eauto.
++ simpl.
+  split.
+  - specialize typing_wf_env with (e := v tp1 e).
+    simpl.
+    firstorder.
+  - apply wf_typ_env_weaken with (e := v tp1 e); trivial.
++ simpl in *.
+  intuition.
++ simpl in *.
+  eapply env_subst_wf_typ; eauto.
+  - apply substv.
+    eapply kinding_wf_typ; eauto.
+  - eapply typing_wf_env; eauto.
+Qed.
+
 Lemma env_subst_wf_env :
   forall X T e e',
   env_subst X T e e' ->
@@ -1057,14 +1061,6 @@ induction e.
   * induction x. 
     +eauto. 
     +apply IHe; omega.
-Qed.
-
-
-Lemma typing_wf_env : forall e u W, typing e u W -> wf_env e.
-Proof.
-induction 1; trivial.
-simpl in IHtyping.
-apply IHtyping.
 Qed.
 
 Lemma wf_typ_strengthening_var :
