@@ -12,16 +12,13 @@ Require Import Bool.
 Require Import Omega.
 Local Open Scope nat_scope.
 
-(** 1.2 DEFINITIONS *)
-
-(** Question 1 : Types *)
+(** ** 1.2 Definitions *)
+(** *** Question 1: Types *)
 
 Inductive typ := 
-| vart : nat -> typ
-(* The latter nat is the de Brujin index of the type variable. *)
+| vart : nat -> typ (**r map a de Brujin index to a type variable. *)
 | arrow : typ -> typ -> typ
-| fall : nat -> typ -> typ.
-(* The latter nat is the kind of the type which is abstracted. *)
+| fall : nat -> typ -> typ. (**r [nat] is the kind of the type which is abstracted. *)
 
 (** The environment is a stack of values.                                   *)
 (** If a term has v bounded variables then they are reprensented by
