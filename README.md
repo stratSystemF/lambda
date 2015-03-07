@@ -31,14 +31,18 @@ TODO
 ##Definitions
 
 Induction on inductive predicates often comes in handy. That makes inductive
-predicates a lot more powerful than functions to Prop defined with Fixpoint.
+predicates a lot more handy than functions to Prop defined with Fixpoint.
 
-TODO : ^ POWERFULL -> 
+TODO : ^ POWERFULL -> pratique? handy? 
 
 There are other advantages to inductive predicates: for instance the ability
 of just applying one of the constructs if you know that's the one that
-was used. With Fixpoint definitions, you always have to consider all the
-branches of the pattern matching.
+was used.
+
+( With Fixpoint definitions, you always have to consider all the
+branches of the pattern matching.) (hum je suis pas trop sûr de ça, c'est pas
+plutôt qu'avec les fixpoint onf ait tout à coup de réductions et qu'on peut pas
+faire ce genre de raisonnements de "Revenir en arrière"?)
 
 
 We sometimes wondered why not all our functions were inductive predicates (for
@@ -65,8 +69,8 @@ TODO Afterward we realized that there was
 automatical ways to do that, but that does not change the fact that semantically,
 we need to compute, so Prop is not Ok. At some point we realized that perhaps we
 could put everything in Type, and not in Prop, because the special features of
-Prop (erasability, impredicativy...) did not seem needed. But it did not seem
-idiomatic in Coq.
+Prop (erasability, impredicativy...) did not seem needed. It did not seem idiomatic
+ in Coq to put everything in Type, even when it is possible.
 
 
 ##Type and term substitution
@@ -81,12 +85,13 @@ Even on paper, these lemmas were important and hard to find. We really often
 wrote wrong lemmas, which led us to loose hours of sleep.
 In fact, all the information we needed was in Vouillon proof scripts 
 but we did not want to copy paste his things. So we started the project without 
-looking at his code. But at some point, we were stuck andd then we try to look
+looking at his code. But at some point, we were stuck and then we tried to look
 at his code. It was the first time we read the Coq code of someone else. It
 was hard to understand, with lot of unknown constructions, and a style really
 different. A simple style example: in his code every proof is computed in one big
-chain of tactics.
-So at this point, a big part of the work was understanding and adapting (even simplifying)
+chain of tactics (and so, by this reading we discover the chaining rules for
+tactics).
+At this point, a big part of the work was to understand and to adapt
 a lot of lemmas and proofs from Vouillon.
 
 Fortunately, most of the time the lemma statements need not so much semantic changes.
@@ -114,6 +119,14 @@ Sometimes, we would like to do proofs in a more direct style but Coq does not ma
 that easy. At last, we found the trick "specialize H1 with (1 := H2)" for that sort
 of things.
 
+We did not find simple way to test a proposition without actually proving it.
+For example, if we have a proposition that states the equality between two things, it
+could be cool to test for small examples, to have an idea of how things works.
+In this case we used the prehistorical tool named "pen".
+In Haskell, it is really common to program a reference
+function, an optimized function, and to use QuickCheck to test if on some random
+examples it works. It seems that there is research on this subject in Coq but we
+did not try what they are doing (Quikchick).
 
 ##Conclusion
 
