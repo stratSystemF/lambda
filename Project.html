@@ -26,14 +26,13 @@
 <span class="kwd">Require</span> <span class="kwd">Import</span> <span class="id">Omega</span>.<br/>
 <span class="kwd">Local</span> <span class="kwd">Open</span> <span class="kwd">Scope</span> <span class="id">nat_scope</span>.<br/>
 <br/>
-<div class="doc">1.2 DEFINITIONS </div>
-<br/>
-<div class="doc">Question 1 : Types </div>
+<h2> 1.2 Definitions </h2>
+<h3> Question 1: Types </h3>
 <br/>
 <span class="kwd">Inductive</span> <span class="id">typ</span> := <br/>
-| <span class="id">vart</span> : <span class="id">nat</span> -&gt; <span class="id">typ</span><br/>
+| <span class="id">vart</span> : <span class="id">nat</span> -&gt; <span class="id">typ</span> <span class="docright">(* map a de Brujin index to a type variable.  *)</span><br/>
 | <span class="id">arrow</span> : <span class="id">typ</span> -&gt; <span class="id">typ</span> -&gt; <span class="id">typ</span><br/>
-| <span class="id">fall</span> : <span class="id">nat</span> -&gt; <span class="id">typ</span> -&gt; <span class="id">typ</span>.<br/>
+| <span class="id">fall</span> : <span class="id">nat</span> -&gt; <span class="id">typ</span> -&gt; <span class="id">typ</span>. <span class="docright">(* <span class="bracket"><span class="id">nat</span></span> is the kind of the type which is abstracted.  *)</span><br/>
 <br/>
 <div class="doc">The environment is a stack of values.                                   </div>
 <div class="doc">If a term has v bounded variables then they are reprensented by
