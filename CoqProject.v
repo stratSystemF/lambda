@@ -1055,7 +1055,7 @@ Proof.
     exact H0.
 Qed.
 
-(** TODO typing_weakening_var_ind *)
+(** TODO: typing_weakening_var_ind *)
 (*Theorem typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
     wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
@@ -1066,7 +1066,6 @@ Qed.
 (** TODO: Regularity and Narrowing *)
 
 (** ** 2 Reduction and Normal Terms *)
-
 (** *** Question 1 *)
 
 (** A relation on [term * term] is [term -> term -> Prop].           *)
