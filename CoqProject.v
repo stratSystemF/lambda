@@ -1055,10 +1055,11 @@ Proof.
     exact H0.
 Qed.
 
-Theorem typing_weakening_var_ind :
+(** TODO typing_weakening_var_ind *)
+(*Theorem typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
     wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
-Abort.
+*)
 
 (** TODO: the same for kinding weakening and preservation*)
 
