@@ -12,7 +12,7 @@ As for the raw source file, you can find it in this repository.
 
 This project has been the first contact with Coq for the two of us. We started
 reading the article. We talked together to precise our understanding of the type
-system and informally how to proove the different lemmas of the subject, without
+system and informally how to prove the different lemmas of the subject, without
 any Coq considerations. Then we started to code linearly, one big file, in the
 way "program what you need". Finally, we did some clean up. Usually it is not a
 good way to program, but we wrote tons of
@@ -126,16 +126,16 @@ did not try what they are doing (Quikchick).
 
 ##Conclusion
 
-Severals time we had the feeling that we were playing a game, without knowing the
+Several time we had the feeling that we were playing a game, without knowing the
 actual rules: the existing keywords we could use. Our learning of Coq was driven
 by what we thought we needed, so we read Coq code and parts of Coq'Art, we asked strong people how to
 do some stuff, we experimented blindly (and sometimes it worked and we discovered new Coq tricks).
-It was a kind of chaotical experience.
+It was kind of a chaotical experience.
 
 There are several things which are not satisfying in our code: the style is not
 uniform (we did not find our style), the code organization is not perfect, we probably missed some big
 shortcuts... If we should redo the project now, it would be a lot easier, with
-the basics of Coqs.
+the basics of Coq.
 
 
 
