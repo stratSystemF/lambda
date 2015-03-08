@@ -1,5 +1,7 @@
 Project for the MPRI course 2.7.2.
 
+[See the formatted source here.](http://stratSystemF.github.io/lambda)
+
 #Advice for the report
 
 The main purpose of this project is to **evaluate your approach to
