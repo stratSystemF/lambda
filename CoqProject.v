@@ -574,7 +574,6 @@ Proof.
 Qed.
 
 (** ** 1.3.1 Type substitution *)
-
 (** *** Question 1 *)
 
 (** [insert_kind X e e'] characterizes [e'] as being the extension of
@@ -1080,10 +1079,11 @@ Inductive oneStep : relation term :=
 | redTyp : forall phi n t, oneStep (applt (dept n t) phi) (subst_typ t 0 phi) (*TO check, I think there is a mistake*)
 | redTerm : forall (phi:typ) t (t':term), oneStep (Top.app (abs phi t) t') (subst t' 0  t)
 | redUnderAbs : forall phi t t', oneStep t t' -> oneStep (abs phi t) (abs phi t')
-| redUnderAbst : forall k t t', oneStep t t' -> oneStep (dept k t) (dept k t') (**r We can do one parallelApp or two AppLeft AppRight. It's equivalent, but the second solution is easier for the proofs*)
+| redUnderAbst : forall k t t', oneStep t t' -> oneStep (dept k t) (dept k t')
 | parallelApp : forall t t' s s', oneStep t t' -> oneStep s s' -> oneStep (Top.app t s) (Top.app t' s')
 | redUnderAppt : forall t t' phi, oneStep t t' -> oneStep (applt t phi) (applt t' phi)
 | id : forall t, oneStep t t. (*TODO This is a choice, we could regret it later*)
+(** We can do one parallelApp or two AppLeft AppRight. It's equivalent, but the second solution is easier for the proofs*)
 
 Definition reduction (t:term) (t':term) : Prop :=
   clos_trans term oneStep t t'.
