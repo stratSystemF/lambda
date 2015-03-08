@@ -1,28 +1,10 @@
 Project for the MPRI course 2.7.2.
 
-[See the formatted source here.](http://stratSystemF.github.io/lambda)
+#Source code
 
-#Advice for the report
+[Please see the formatted source here.](http://stratSystemF.github.io/lambda)
 
-The main purpose of this project is to **evaluate your approach to
-formalization, and your comments on the value of the solutions you tried**.
-Investigating several possible definitions/proof methods is a good thing and **we
-value your description of the problems encountered and of the solutions you
-eventually preferred** as much as the the number of questions you answer too. The
-best mark will not necessarily go to the project answering the maximum number of
-questions.
-
-The report should be a separate, readable document, ideally in pdf format,
-written in English or in French. It should not exceed 5 pages of a reasonably
-readable document style (no magnifying glass needed). It can refer to the code
-but **should explain the approach, the problems encountered, and comment the code
-submitted**: is it satisfactory (data-structures, statements, proof scripts) or
-were some proofs more difficult (or easier!) formally than on paper, what was
-difficult and why, what ingredient or what method worked well, did you use/lack
-of some automation tools...
-
-_Now that we have spent so much time writing code, neglecting the report would
-be stupid!_
+As for the raw source file, you can find it in this repository.
 
 #Report draft
 
