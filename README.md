@@ -6,7 +6,7 @@ Project for the MPRI course 2.7.2.
 
 As for the raw source file, you can find it in this repository.
 
-#Report draft
+#Report
 
 ##Introduction
 
