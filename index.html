@@ -1107,10 +1107,7 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">exact</span> <span class="id">H0</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Theorem</span> <span class="id">typing_weakening_var_ind</span> :<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">x</span> : <span class="id">nat</span>) (<span class="id">t</span> : <span class="id">term</span>) (<span class="id">U</span> : <span class="id">typ</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">typing</span> (<span class="id">remove_var</span> <span class="id">x</span> <span class="id">e</span>) <span class="id">t</span> <span class="id">U</span> -&gt; <span class="id">typing</span> <span class="id">e</span> (<span class="id">shift</span> <span class="id">t</span> <span class="id">x</span>) <span class="id">U</span>.<br/>
-Abort.</div>
+<div class="doc">TODO typing_weakening_var_ind </div>
 <br/>
 <div class="doc">TODO: the same for kinding weakening and preservation</div>
 <br/>
