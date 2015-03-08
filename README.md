@@ -23,27 +23,26 @@ _Now that we have spent so much time writing code, neglecting the report would
 be stupid!_
 
 #Report draft
-TODO J'ai rajouté des TODO sur mes changements/
+
 ##Introduction
 
-TODO
+This project has been the first contact with Coq for the two of us. We started
+reading the article. We talked together to precise our understanding of the type
+system and informally how to proof the different lemmas of the subject, without
+any coq considerations. Then we started to code linearly, one big file, in the
+way "program what you need". Finally, we did some clean up. Usually it is not a
+good way to program, but  we wrote tons of
+useless things, and we wanted to wait for the end of the project to be sure that
+these things were actually useless.
 
 ##Definitions
 
 Induction on inductive predicates often comes in handy. That makes inductive
 predicates a lot more handy than functions to Prop defined with Fixpoint.
 
-TODO : ^ POWERFULL -> pratique? handy? 
-
 There are other advantages to inductive predicates: for instance the ability
 of just applying one of the constructs if you know that's the one that
-was used.
-
-( With Fixpoint definitions, you always have to consider all the
-branches of the pattern matching.) (hum je suis pas trop sûr de ça, c'est pas
-plutôt qu'avec les fixpoint onf ait tout à coup de réductions et qu'on peut pas
-faire ce genre de raisonnements de "Revenir en arrière"?)
-
+was used. 
 
 We sometimes wondered why not all our functions were inductive predicates (for
 instance wf_env, wf_typ) but we didn't go all the way to make the change because:
@@ -59,17 +58,14 @@ painful, but it seems that it is because the problem is intrinsically painful.
 
 ##Kind and type inference
 
-Explain why it was difficult
-
 The current approach of translating almost everything into boolean functions
 is probably not the best one but it worked and it took us a lot of time
 already so we had to move on.
 
-TODO Afterward we realized that there was 
-automatical ways to do that, but that does not change the fact that semantically,
-we need to compute, so Prop is not Ok. At some point we realized that perhaps we
+Afterward we realized that there was automatical ways to do that, but that does not change the fact that semantically,
+we need to compute. So Prop is not Ok. At some point we realized that perhaps we
 could put everything in Type, and not in Prop, because the special features of
-Prop (erasability, impredicativy...) did not seem needed. It did not seem idiomatic
+Prop (erasability, impredicativy...) did not seem needed. But it did not seem idiomatic
  in Coq to put everything in Type, even when it is possible.
 
 
@@ -80,7 +76,7 @@ The difficulties laid:
 1. In expressing correctly the theorems, especially because of De Bruijn indices;
 2. In proving them because we needed tons of lemmas that the subject
 nor the article provided.
-TODO:
+
 Even on paper, these lemmas were important and hard to find. We really often
 wrote wrong lemmas, which led us to loose hours of sleep.
 In fact, all the information we needed was in Vouillon proof scripts 
@@ -97,6 +93,7 @@ a lot of lemmas and proofs from Vouillon.
 Fortunately, most of the time the lemma statements need not so much semantic changes.
 Because the main difference between the system we studied and the system Vouillon studied was on
 the kind.
+
 
 ##Reduction and normal terms
 
