@@ -913,7 +913,7 @@ Proof.
     apply H.
 Qed.
 
-Lemma kinding_add:
+Theorem kinding_add:
   forall u e n  W ,
   wf_env e -> kinding (remove_var n e) u W -> kinding e u W.
 Proof.
@@ -977,7 +977,7 @@ Proof.
 Qed.
 
 (** Kinding is invariant by [remove_var]. *)
-Lemma kinding_remove :
+Theorem kinding_remove :
   forall tp2 e k n',
   wf_env e -> kinding e tp2 k -> kinding (remove_var n' e) tp2 k.
 Proof.
@@ -1111,9 +1111,6 @@ assert (exists e', e' = remove_var n e) as [e' E].
     rewrite E in H.
     eapply kinding_add; eauto.
 Qed.
-
-
-(** TODO: the same for kinding weakening and preservation*)
 
 (** TODO: Regularity and Narrowing *)
 
