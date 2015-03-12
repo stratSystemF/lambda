@@ -843,7 +843,15 @@ Proof.
   eapply env_subst_wf_typ; eauto.
 Qed.
 
-(** TODO : part 1 of Lemma 4 (Substitution for Kinding) of the article *)
+(** part 1 of Lemma 4 (Substitution for Kinding) of the article *)
+Theorem subst_kinding :
+  forall X T1 T2 k e e',
+  env_subst X T1 e e' ->
+  kinding e T2 k ->
+  kinding e' (tsubst T2 X T1) k.
+Proof.
+  admit.
+Qed.
 
 (** ** 1.3.2 Term substitution *)
 
@@ -1137,7 +1145,7 @@ Proof.
     now apply kinded_fall.
 Qed.
 
-(** Lemma 1.2 (= Lemma 7 of paper) Regularity *)
+(** *** Lemma 1.2 (= Lemma 7 of paper) Regularity *)
 Theorem regularity :
   forall e tp trm, typing e trm tp -> exists k, kinding e tp k.
 Proof.
@@ -1157,12 +1165,22 @@ Proof.
         exists k.
         apply kinding_add with (n := 0); firstorder.
   + admit.
-  + admit.
-  + admit.
-  + admit.
+  + destruct IHtyping1 as [k1 ihk1].
+    inversion ihk1.
+    now exists q.
+  + destruct IHtyping as [k1 ihk1].
+    exists (1 + max k1 kl).
+    now apply kinded_fall.
+  + destruct IHtyping as [k1 ihk1].
+    inversion ihk1.
+    exists p.
+    eapply subst_kinding; eauto.
+    apply substv.
+    eapply kinding_wf_typ; eauto.
 Qed.
 
-(** TODO: Narrowing *)
+(** *** Lemma 1.3 Narrowing *)
+(** TODO *)
 
 (** ** 2 Reduction and Normal Terms *)
 (** *** Question 1 *)
