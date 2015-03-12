@@ -1064,61 +1064,105 @@ Lemma get_var_remove_var_lt :
   forall (e : env) (x x' : nat),
   x < x' -> get_typ (remove_var x' e) x = get_typ e x.
 Proof.
-induction e; simpl; trivial; intros x x' H.
-+ destruct x'.
-  - omega.
-  - rewrite IHe; trivial.
-+ destruct x'; destruct x; try omega; simpl; trivial.
-  apply IHe.
-  omega.
+  induction e; simpl; trivial; intros x x' H.
+  + destruct x'.
+    - omega.
+    - rewrite IHe; trivial.
+  + destruct x'; destruct x; try omega; simpl; trivial.
+    apply IHe.
+    omega.
 Qed.
 
 Lemma get_var_remove_var_ge :
   forall (e : env) (x x' : nat),
   x >= x' -> get_typ (remove_var x' e) x = get_typ e (1 + x).
 Proof.
-induction e; simpl; trivial; intros x x' H.
-+ rewrite IHe; trivial.
-+ destruct x'; destruct x; try omega; simpl; trivial.
-  apply IHe.
-  omega.
+  induction e; simpl; trivial; intros x x' H.
+  + rewrite IHe; trivial.
+  + destruct x'; destruct x; try omega; simpl; trivial.
+    apply IHe.
+    omega.
 Qed.
 
 Theorem typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
     wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
 Proof.
-intros e n t U H1 H2.
-assert (exists e', e' = remove_var n e) as [e' E].
-+ exists (remove_var n e); trivial.
-+ rewrite <- E in H2.
-  revert n e E H1; induction H2; intros n' e' E H1; simpl.
-  - apply typed_var; trivial.
-    rewrite E in H.
-    destruct le_gt_dec.
-    * rewrite get_var_remove_var_ge in H; trivial; omega.
-    * rewrite get_var_remove_var_lt in H; trivial; omega.
-  - apply typed_abs.
-    apply IHtyping.
-    * rewrite E; trivial.
-    * simpl.
-      split; trivial.
-      assert (wf_env (v tp1 e)) as H3.
-      eapply typing_wf_env; eauto.
-      rewrite E in H3.
-      destruct H3 as [H3 _].
-      eapply wf_typ_add; eauto.
-  - eapply typed_app; eauto.
-  - apply typed_dept.
-    apply IHtyping.
-    * rewrite E; trivial.
-    * simpl; trivial.
-  - eapply typed_applt; eauto.
-    rewrite E in H.
-    eapply kinding_add; eauto.
+  intros e n t U H1 H2.
+  assert (exists e', e' = remove_var n e) as [e' E].
+  + exists (remove_var n e); trivial.
+  + rewrite <- E in H2.
+    revert n e E H1; induction H2; intros n' e' E H1; simpl.
+    - apply typed_var; trivial.
+      rewrite E in H.
+      destruct le_gt_dec.
+      * rewrite get_var_remove_var_ge in H; trivial; omega.
+      * rewrite get_var_remove_var_lt in H; trivial; omega.
+    - apply typed_abs.
+      apply IHtyping.
+      * rewrite E; trivial.
+      * simpl.
+        split; trivial.
+        assert (wf_env (v tp1 e)) as H3.
+        eapply typing_wf_env; eauto.
+        rewrite E in H3.
+        destruct H3 as [H3 _].
+        eapply wf_typ_add; eauto.
+    - eapply typed_app; eauto.
+    - apply typed_dept.
+      apply IHtyping.
+      * rewrite E; trivial.
+      * simpl; trivial.
+    - eapply typed_applt; eauto.
+      rewrite E in H.
+      eapply kinding_add; eauto.
 Qed.
 
-(** TODO: Regularity and Narrowing *)
+Lemma regularity_base_case :
+  forall (tp : typ) (e : env),
+  wf_env e -> wf_typ e tp -> exists k : nat, kinding e tp k.
+Proof.
+  induction tp; intros e H0 H1; simpl in H1.
+  + destruct (get_kind e n) eqn:eq; rewrite <- eq in H1; intuition.
+    exists n0.
+    eapply kinded_var; eauto.
+  + destruct H1 as [H1tp1 H1tp2].
+    destruct (IHtp1 e H0 H1tp1) as [ktp1 ihtp1].
+    destruct (IHtp2 e H0 H1tp2) as [ktp2 ihtp2].
+    exists (max ktp1 ktp2).
+    now apply kinded_arrow.
+  + assert (wf_env (v_typ n e)) as h0; firstorder.
+    destruct (IHtp (v_typ n e) h0 H1) as [ihk ih].
+    exists (1 + max ihk n).
+    now apply kinded_fall.
+Qed.
+
+(** Lemma 1.2 (= Lemma 7 of paper) Regularity *)
+Theorem regularity :
+  forall e tp trm, typing e trm tp -> exists k, kinding e tp k.
+Proof.
+  induction 1.
+  + revert x tp H; induction e; simpl in *; try discriminate; intros.
+    - destruct (get_typ e x) eqn:eq; simpl in H; inversion H.
+      destruct (IHe H0 x t eq) as [k H3].
+      exists k.
+      eapply insert_kind_kinding; eauto.
+      apply insert_0.
+    - destruct x; inversion H as [eq]; destruct H0 as [H1 H0].
+      * rewrite eq in H1.
+        cut (exists k, kinding e tp k).
+        intros [k H2]; exists k; apply kinding_add with (n := 0); firstorder.
+        now apply regularity_base_case.        
+      * destruct (IHe H0 x tp eq) as [k H3].
+        exists k.
+        apply kinding_add with (n := 0); firstorder.
+  + admit.
+  + admit.
+  + admit.
+  + admit.
+Qed.
+
+(** TODO: Narrowing *)
 
 (** ** 2 Reduction and Normal Terms *)
 (** *** Question 1 *)
