@@ -1053,6 +1053,31 @@ Proof.
     exact H0.
 Qed.
 
+(** The statement of the following two lemmas has been inspired by Vouillon *)
+Lemma get_var_remove_var_lt :
+  forall (e : env) (x x' : nat),
+  x < x' -> get_typ (remove_var x' e) x = get_typ e x.
+Proof.
+induction e; simpl; trivial; intros x x' H.
++ destruct x'.
+  - omega.
+  - rewrite IHe; trivial.
++ destruct x'; destruct x; try omega; simpl; trivial.
+  apply IHe.
+  omega.
+Qed.
+
+Lemma get_var_remove_var_ge :
+  forall (e : env) (x x' : nat),
+  x >= x' -> get_typ (remove_var x' e) x = get_typ e (1 + x).
+Proof.
+induction e; simpl; trivial; intros x x' H.
++ rewrite IHe; trivial.
++ destruct x'; destruct x; try omega; simpl; trivial.
+  apply IHe.
+  omega.
+Qed.
+
 Theorem typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
     wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
@@ -1063,10 +1088,10 @@ assert (exists e', e' = remove_var n e) as [e' E].
 + rewrite <- E in H2.
   revert n e E H1; induction H2; intros n' e' E H1; simpl.
   - apply typed_var; trivial.
-    rewrite E in H0.
+    rewrite E in H.
     destruct le_gt_dec.
-    * admit; rewrite get_var_remove_var_ge in H0; trivial; omega.
-    * admit; rewrite get_var_remove_var_lt in H0; trivial; omega.
+    * rewrite get_var_remove_var_ge in H; trivial; omega.
+    * rewrite get_var_remove_var_lt in H; trivial; omega.
   - apply typed_abs.
     apply IHtyping.
     * rewrite E; trivial.
