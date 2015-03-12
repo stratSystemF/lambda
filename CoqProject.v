@@ -931,9 +931,9 @@ Lemma typ_shift_remove:
   wf_env e -> typing (remove_var n e) u W -> typing e (shift u n) W.
 Proof.
   intuition.
-  cut(exists e', e'= remove_var n e). (*Ce n'est pas comme assert! la coupure est ici nécessaire*)
+  assert (exists e', e'= remove_var n e) as [x H1].
+  - exists (remove_var n e); trivial.
   - intros.
-    destruct H1.
     rewrite <- H1 in H0.
     revert n e H1 H; induction H0; firstorder; simpl.
     * apply typed_var.
@@ -960,7 +960,6 @@ Proof.
     * eapply typed_applt; eauto.
       eapply kinding_add with (n := n); eauto.
       now rewrite <- H1.
-  - exists (remove_var n e); trivial.
 Qed.
 
 (** Well-formedness is invariant by [remove_var] *)
