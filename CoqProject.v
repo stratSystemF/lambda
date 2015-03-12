@@ -553,6 +553,7 @@ Qed.
 (** ** 1.3 Basic Metatheory *)
 
 (** *** Lemma 1.1 (Cumulativity) *)
+(** Corresponds to Lemma 3 (Level Weakening for Kinding) of the paper *)
 
 Theorem cumulativity :
   forall e t k k', kinding e t k -> k <= k' -> kinding e t k'.
@@ -630,6 +631,8 @@ Proof.
 Qed.
 
 (** Kinding is invariant by weakening *)
+(** This corresponds to Lemma 8 (Context Weakening for Kinding) of the paper *)
+(** We could also add the dual Lemma 10 (Context Strengthening for Kinding) *)
 Theorem insert_kind_kinding :
   forall T X e e' k,
     insert_kind X e e' ->
@@ -829,6 +832,7 @@ Proof.
 Qed.
 
 (** Well-formedness is invariant by [env_subst] *)
+(** Corresponds to part 2 of Lemma 4 (Context-Ok) of the article *)
 Theorem env_subst_wf_env :
   forall X T e e',
     env_subst X T e e' ->
@@ -838,6 +842,8 @@ Proof.
   induction 1; firstorder.
   eapply env_subst_wf_typ; eauto.
 Qed.
+
+(** TODO : part 1 of Lemma 4 (Substitution for Kinding) of the article *)
 
 (** ** 1.3.2 Term substitution *)
 
