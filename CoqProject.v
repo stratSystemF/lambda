@@ -913,7 +913,7 @@ Proof.
     apply H.
 Qed.
 
-Lemma kinding_remove:
+Lemma kinding_add:
   forall u e n  W ,
   wf_env e -> kinding (remove_var n e) u W -> kinding e u W.
 Proof.
@@ -958,7 +958,7 @@ Proof.
       simpl.
       exact H.
     * eapply typed_applt; eauto.
-      eapply kinding_remove with (n := n); eauto.
+      eapply kinding_add with (n := n); eauto.
       now rewrite <- H1.
   - exists (remove_var n e); trivial.
 Qed.
@@ -978,7 +978,7 @@ Proof.
 Qed.
 
 (** Kinding is invariant by [remove_var]. *)
-Lemma kind_remove :
+Lemma kinding_remove :
   forall tp2 e k n',
   wf_env e -> kinding e tp2 k -> kinding (remove_var n' e) tp2 k.
 Proof.
@@ -1049,16 +1049,45 @@ Proof.
       eapply typing_wf_typ; eauto.
     * rewrite E1; trivial.
   - eapply typed_applt; eauto.
-    apply kind_remove.
+    apply kinding_remove.
     eapply typing_wf_env; eauto.
     exact H0.
 Qed.
 
-(** TODO: typing_weakening_var_ind *)
-(*Theorem typing_weakening_var_ind :
+Theorem typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
     wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
-*)
+Proof.
+intros e n t U H1 H2.
+assert (exists e', e' = remove_var n e) as [e' E].
++ exists (remove_var n e); trivial.
++ rewrite <- E in H2.
+  revert n e E H1; induction H2; intros n' e' E H1; simpl.
+  - apply typed_var; trivial.
+    rewrite E in H0.
+    destruct le_gt_dec.
+    * admit; rewrite get_var_remove_var_ge in H0; trivial; omega.
+    * admit; rewrite get_var_remove_var_lt in H0; trivial; omega.
+  - apply typed_abs.
+    apply IHtyping.
+    * rewrite E; trivial.
+    * simpl.
+      split; trivial.
+      assert (wf_env (v tp1 e)) as H3.
+      eapply typing_wf_env; eauto.
+      rewrite E in H3.
+      destruct H3 as [H3 _].
+      eapply wf_typ_add; eauto.
+  - eapply typed_app; eauto.
+  - apply typed_dept.
+    apply IHtyping.
+    * rewrite E; trivial.
+    * simpl; trivial.
+  - eapply typed_applt; eauto.
+    rewrite E in H.
+    eapply kinding_add; eauto.
+Qed.
+
 
 (** TODO: the same for kinding weakening and preservation*)
 
