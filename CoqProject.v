@@ -852,6 +852,17 @@ Theorem subst_kinding :
 Proof.
   admit.
 Qed.
+(* Proof started...
+  induction 2.
+  + simpl.
+    destruct (eq_nat_dec X X0) as [H3 | H3].
+    - rewrite H3 in H; clear H3 X.
+      induction H.
+      * apply insert_kind_kinding with (e := e').
+        apply insert_0.
+        apply IHenv_subst; firstorder.
+      * 
+*)
 
 (** ** 1.3.2 Term substitution *)
 
@@ -1164,7 +1175,7 @@ Proof.
       * destruct (IHe H0 x tp eq) as [k H3].
         exists k.
         apply kinding_add with (n := 0); firstorder.
-  + admit.
+  + admit. (**r It seems to be the hard case because one induction hyp is missing *)
   + destruct IHtyping1 as [k1 ihk1].
     inversion ihk1.
     now exists q.
