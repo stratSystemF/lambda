@@ -855,6 +855,7 @@ Theorem subst_kinding :
   env_subst X T1 e e' ->
   kinding e T2 k ->
   kinding e' (tsubst T2 X T1) k.
+Proof.
   induction 3. (**r Following closely the proof of the paper *)
   + simpl.
     destruct (eq_nat_dec X X0) as [H4 | H4].
