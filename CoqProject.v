@@ -304,7 +304,12 @@ Inductive kinding (e : env) : typ -> nat -> Prop :=
                   kinding (v_typ k1 e) tp1 p ->
                   kinding e (fall k1 tp1) (1 + max p k1).
 
-(** This lemma will be useful in the next section. *)
+(** These lemmas will be useful in the following sections. *)
+Lemma kinding_wf_env : forall e tp k, kinding e tp k -> wf_env e.
+Proof.
+  induction 1; firstorder.
+Qed.
+
 Lemma kinding_wf_typ : forall e tp k, kinding e tp k -> wf_typ e tp.
 Proof.
   induction 1; simpl in *; intuition.
@@ -1175,7 +1180,13 @@ Proof.
       * destruct (IHe H0 x tp eq) as [k H3].
         exists k.
         apply kinding_add with (n := 0); firstorder.
-  + admit. (**r It seems to be the hard case because one induction hyp is missing *)
+  + destruct IHtyping as [k1 ihk1].
+    assert (H1 := kinding_wf_env (v tp1 e) tp2 k1 ihk1); destruct H1 as [H1 H2].
+    destruct (regularity_base_case tp1 e H2 H1) as [k2 ihk2].
+    exists (max k2 k1).
+    apply kinded_arrow; trivial.
+    assert (e = remove_var 0 (v tp1 e)) as eq; firstorder; rewrite eq.
+    apply kinding_remove; firstorder.
   + destruct IHtyping1 as [k1 ihk1].
     inversion ihk1.
     now exists q.
