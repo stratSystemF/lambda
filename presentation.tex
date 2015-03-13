@@ -10,7 +10,7 @@
    
    \begin{document}
 
-	\title{Apprenons à utiliser Coq.}
+	\title{Immersion dans Coq : un début de formalisation du système F}
 	\author{Théo Zimmermann, Thomas Bourgeat}
 \frame{\titlepage}
 
@@ -33,9 +33,7 @@ préservation, d'affaiblissement ...)}
 
     \begin{frame}
     \frametitle{Qu'avons-nous faits?}
-    Pragmatiquement:
 	\begin{itemize}
-	\pause
 	\item Définitions (partie 1.2)
 	\begin{itemize}
 	\item Complétude de l'inférence de kind mais pas de l'inférence
@@ -67,14 +65,18 @@ formation
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Réduction parallèle}
+\begin{frame}[fragile]
 \begin{itemize}
 \item Réduction simultanée des deux côté d'une application.
-\begin{itemize}
-\item Après la cloture transitive, ça change pas grand chose.
-\item A l'origine d'une petite pénibilité TODO préciser ça
-\end{itemize}
 \pause
+\end{itemize}
+\begin{verbatim}
+reduction t t' ->
+reduction s s' ->
+reduction (Top.app t s) (Top.app t's').
+\end{verbatim}
+\pause
+\begin{itemize}
 \item Nous nous sommes basés sur \emph{A tutorial implementation of a
 dependently typed lambda-calculus} (Löh et al.) pour la neutralité et la
 normalité. On a étendu ça "naturellement".
@@ -100,7 +102,45 @@ with neutral : term -> Prop :=
 
 \section{Problèmes et difficultés}
 
-\begin{frame}
+\begin{frame}{La connaissance c'est le pouvoir}
+\begin{itemize}
+\item On a découvert des mots magiques au fur et à mesure:
+\pause
+\begin{itemize}
+\item specialize
+\item generalize
+\item lia
+\item firstorder
+\end{itemize}
+\pause
+\item avant ça on a fait du \emph{assert} à toutes les sauces.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Formalisation}
+\begin{itemize}
+\item Pour construire un prédicat inductif il vaut mieux faire des essais
+papiers à la main \emph{avant} d'essayer de faire des preuves de choses
+compliquées utilisant ce prédicat.
+\pause
+\item Trouver la bonne formulation des lemmes. (on a parfois oublié de mettre une
+hypothèse de bonne formation qui nous semblait pas nécessaire mais en
+fait si).
+\pause
+\item Faire les cas de base sur papier, on a écrit beaucoup de lemmes
+faux, qu'on a momentanément pensé \emph{clairement justes}.
+\pause
+\item \emph{Choisir des noms qui n'introduisent pas de biais
+psychologique}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Prochaine étape}
+\begin{itemize}
+\item Apprendre Ltac
+\item Remercier Jérôme Vouillon d'avoir fait un code qui nous a permis
+d'apprendre coq, de se débloquer quand on était trop bloqués. 
+\end{itemize}
 \end{frame}
 
 \end{document}
