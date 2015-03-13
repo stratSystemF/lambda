@@ -307,7 +307,7 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">intuition</span>; <span class="tactic">apply</span> <span class="id">wf_typ_equiv</span>; <span class="tactic">assumption</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Kinding predicate </div>
+<h3> Kinding predicate </h3>
 <div class="doc">After Figure 5: Stratified System F Kinding Rules </div>
 <span class="kwd">Inductive</span> <span class="id">kinding</span> (<span class="id">e</span> : <span class="id">env</span>) : <span class="id">typ</span> -&gt; <span class="id">nat</span> -&gt; <span class="kwd">Prop</span> :=<br/>
 | <span class="id">kinded_var</span> : <span class="kwd">forall</span> <span class="id">X</span> <span class="id">k</span> <span class="id">p</span>,<br/>
@@ -338,7 +338,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="tactic">discriminate</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Kind inference </div>
+<h3> Kind inference </h3>
 <div class="doc">This function computes the minimal kind for a type term. </div>
 <span class="kwd">Fixpoint</span> <span class="id">kind</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">tp</span> : <span class="id">typ</span>) : (<span class="id">option</span> <span class="id">nat</span>) :=<br/>
 &nbsp;&nbsp;<span class="kwd">match</span> <span class="id">tp</span> <span class="kwd">with</span><br/>
@@ -412,7 +412,7 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">reflexivity</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Typing predicate </div>
+<h3> Typing predicate </h3>
 <div class="doc">After Figure 6: Stratified System F Type-Checking Rules </div>
 <span class="kwd">Inductive</span> <span class="id">typing</span> : <span class="id">env</span> -&gt; <span class="id">term</span> -&gt; <span class="id">typ</span> -&gt; <span class="kwd">Prop</span> :=<br/>
 | <span class="id">typed_var</span> : <span class="kwd">forall</span> <span class="id">e</span> (<span class="id">tp</span> : <span class="id">typ</span>) (<span class="id">x</span> : <span class="id">nat</span>),<br/>
@@ -485,7 +485,7 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H2</span> <span class="kwd">in</span> <span class="id">iht1</span>; <span class="tactic">auto</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Type inference </div>
+<h3> Type inference </h3>
 <span class="kwd">Fixpoint</span> <span class="id">type</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">trm</span> : <span class="id">term</span>) {<span class="kwd">struct</span> <span class="id">trm</span>} : <span class="id">option</span> <span class="id">typ</span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">match</span> <span class="id">trm</span> <span class="kwd">with</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">var</span> <span class="id">x</span> =&gt; <span class="kwd">if</span> <span class="id">wf_env_bool</span> <span class="id">e</span> <span class="kwd">then</span> <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span> <span class="kwd">else</span> <span class="id">None</span><br/>
@@ -802,7 +802,7 @@ Qed.</div>
 <br/>
 <div class="doc">The following lemmas are deeply inspired by Vouillon
     even if the proof is ours alone.                     </div>
-<span class="kwd">Lemma</span> <span class="id">env_subst_get_bound_lt</span> :<br/>
+<span class="kwd">Lemma</span> <span class="id">env_subst_get_kind_lt</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">X</span> <span class="id">X</span>' : <span class="id">nat</span>) (<span class="id">e</span> <span class="id">e</span>' : <span class="id">env</span>) (<span class="id">T</span> : <span class="id">typ</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;(<span class="id">env_subst</span> <span class="id">X</span>' <span class="id">T</span> <span class="id">e</span> <span class="id">e</span>') -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span> &lt; <span class="id">X</span>' -&gt;<br/>
@@ -816,7 +816,7 @@ Qed.</div>
 &nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">env_subst_get_bound_gt</span> :<br/>
+<span class="kwd">Lemma</span> <span class="id">env_subst_get_kind_gt</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">X</span> <span class="id">X</span>' : <span class="id">nat</span>) (<span class="id">e</span> <span class="id">e</span>' : <span class="id">env</span>) (<span class="id">T</span> : <span class="id">typ</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">env_subst</span> <span class="id">X</span>' <span class="id">T</span> <span class="id">e</span> <span class="id">e</span>' -&gt;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">X</span>' &lt; <span class="id">X</span> -&gt;<br/>
@@ -847,9 +847,9 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">now</span> <span class="tactic">apply</span> <span class="id">wf_typ_weakening_v_typ</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">now</span> <span class="tactic">apply</span> <span class="id">wf_typ_weak_strength_var</span>.<br/>
 &nbsp;&nbsp;- <span class="tactic">destruct</span> (<span class="id">le_gt_dec</span> <span class="id">n</span> <span class="id">X</span>); <span class="tactic">simpl</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">erewrite</span> <span class="id">env_subst_get_bound_lt</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">erewrite</span> <span class="id">env_subst_get_kind_lt</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">erewrite</span> <span class="id">env_subst_get_bound_gt</span>; <span class="tactic">eauto</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;* <span class="id">erewrite</span> <span class="id">env_subst_get_kind_gt</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">firstorder</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">simpl</span>; <span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">IHT1</span>; <span class="tactic">eauto</span>.<br/>
@@ -902,18 +902,18 @@ Qed.</div>
 <br/>
 <h2> 1.3.2 Term substitution </h2>
 <br/>
-<span class="kwd">Fixpoint</span> <span class="id">remove_var</span> (<span class="id">x</span>:<span class="id">nat</span>) (<span class="id">e</span>:<span class="id">env</span>) {<span class="kwd">struct</span> <span class="id">e</span>} : <span class="id">env</span> :=<br/>
+<span class="kwd">Fixpoint</span> <span class="id">remove_typ</span> (<span class="id">x</span>:<span class="id">nat</span>) (<span class="id">e</span>:<span class="id">env</span>) {<span class="kwd">struct</span> <span class="id">e</span>} : <span class="id">env</span> :=<br/>
 &nbsp;&nbsp;<span class="kwd">match</span> <span class="id">e</span> <span class="kwd">with</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">empty</span> =&gt; <span class="id">empty</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">v_typ</span> <span class="id">k</span> <span class="id">e</span> =&gt; <span class="id">v_typ</span> <span class="id">k</span> (<span class="id">remove_var</span> <span class="id">x</span> <span class="id">e</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">v_typ</span> <span class="id">k</span> <span class="id">e</span> =&gt; <span class="id">v_typ</span> <span class="id">k</span> (<span class="id">remove_typ</span> <span class="id">x</span> <span class="id">e</span>)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;| <span class="id">v</span> <span class="id">t</span> <span class="id">e</span> =&gt; <span class="kwd">match</span> <span class="id">x</span> <span class="kwd">with</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| 0 =&gt; <span class="id">e</span><br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<span class="id">S</span> <span class="id">X</span> =&gt; <span class="id">v</span> <span class="id">t</span> (<span class="id">remove_var</span> <span class="id">X</span> <span class="id">e</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<span class="id">S</span> <span class="id">X</span> =&gt; <span class="id">v</span> <span class="id">t</span> (<span class="id">remove_typ</span> <span class="id">X</span> <span class="id">e</span>)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kwd">end</span><br/>
 &nbsp;&nbsp;<span class="kwd">end</span>.<br/>
 <br/>
 <span class="kwd">Lemma</span> <span class="id">get_typ_wk</span> :<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt; <span class="id">y</span> -&gt; <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span> = <span class="id">get_typ</span> (<span class="id">remove_var</span> <span class="id">y</span> <span class="id">e</span>) <span class="id">x</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">x</span> <span class="id">y</span>, <span class="id">x</span> &lt; <span class="id">y</span> -&gt; <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span> = <span class="id">get_typ</span> (<span class="id">remove_typ</span> <span class="id">y</span> <span class="id">e</span>) <span class="id">x</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof29')">Proof.</div>
 <div class="proofscript" id="proof29">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">e</span>; <span class="tactic">intuition</span>.<br/>
@@ -926,8 +926,8 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">IHe</span>; <span class="tactic">omega</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">get_remove</span> :<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">n</span> <span class="id">x</span> , <span class="id">S</span> <span class="id">x</span> &gt; <span class="id">n</span> -&gt; <span class="id">get_typ</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">x</span> = <span class="id">get_typ</span> <span class="id">e</span> (<span class="id">S</span> <span class="id">x</span>).<br/>
+<span class="kwd">Lemma</span> <span class="id">get_typ_add</span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">n</span> <span class="id">x</span> , <span class="id">S</span> <span class="id">x</span> &gt; <span class="id">n</span> -&gt; <span class="id">get_typ</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">x</span> = <span class="id">get_typ</span> <span class="id">e</span> (<span class="id">S</span> <span class="id">x</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof30')">Proof.</div>
 <div class="proofscript" id="proof30">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">e</span>; <span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">induction</span> <span class="id">x</span>; <span class="tactic">firstorder</span>.<br/>
@@ -943,8 +943,8 @@ Qed.</div>
 &nbsp;&nbsp;- <span class="tactic">omega</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">get_remove_2</span> :<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">x</span>  <span class="id">n</span> , <span class="id">x</span> &lt; <span class="id">n</span> -&gt; <span class="id">get_typ</span> <span class="id">e</span>  <span class="id">x</span> = <span class="id">get_typ</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">x</span> .<br/>
+<span class="kwd">Lemma</span> <span class="id">get_typ_remove</span> :<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">x</span>  <span class="id">n</span> , <span class="id">x</span> &lt; <span class="id">n</span> -&gt; <span class="id">get_typ</span> <span class="id">e</span>  <span class="id">x</span> = <span class="id">get_typ</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">x</span> .<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof31')">Proof.</div>
 <div class="proofscript" id="proof31">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">e</span>; <span class="tactic">trivial</span>; <span class="tactic">intros</span> <span class="id">x</span>' <span class="id">n</span>' <span class="id">H</span>.<br/>
@@ -958,7 +958,7 @@ Qed.</div>
 Qed.</div>
 <br/>
 <span class="kwd">Lemma</span> <span class="id">get_kind_remove</span> :<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">x</span> <span class="id">x</span>', <span class="id">get_kind</span> <span class="id">e</span> <span class="id">x</span> = <span class="id">get_kind</span> (<span class="id">remove_var</span> <span class="id">x</span>' <span class="id">e</span>) <span class="id">x</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">e</span> <span class="id">x</span> <span class="id">x</span>', <span class="id">get_kind</span> <span class="id">e</span> <span class="id">x</span> = <span class="id">get_kind</span> (<span class="id">remove_typ</span> <span class="id">x</span>' <span class="id">e</span>) <span class="id">x</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof32')">Proof.</div>
 <div class="proofscript" id="proof32">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">e</span>.<br/>
@@ -970,7 +970,7 @@ Qed.</div>
 &nbsp;&nbsp;* <span class="tactic">induction</span> <span class="id">x</span>'; <span class="tactic">intros</span>; <span class="tactic">simpl</span>; <span class="tactic">trivial</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">wf_typ_add</span> : <span class="kwd">forall</span> <span class="id">t</span> <span class="id">e</span> <span class="id">n</span>, <span class="id">wf_typ</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">t</span> -&gt; <span class="id">wf_typ</span> <span class="id">e</span> <span class="id">t</span>.<br/>
+<span class="kwd">Lemma</span> <span class="id">wf_typ_add</span> : <span class="kwd">forall</span> <span class="id">t</span> <span class="id">e</span> <span class="id">n</span>, <span class="id">wf_typ</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">t</span> -&gt; <span class="id">wf_typ</span> <span class="id">e</span> <span class="id">t</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof33')">Proof.</div>
 <div class="proofscript" id="proof33">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t</span>; <span class="tactic">firstorder</span>.<br/>
@@ -981,7 +981,7 @@ Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id">kinding_add</span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">u</span> <span class="id">e</span> <span class="id">n</span>  <span class="id">W</span> ,<br/>
-&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">kinding</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">u</span> <span class="id">W</span> -&gt; <span class="id">kinding</span> <span class="id">e</span> <span class="id">u</span> <span class="id">W</span>.<br/>
+&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">kinding</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">u</span> <span class="id">W</span> -&gt; <span class="id">kinding</span> <span class="id">e</span> <span class="id">u</span> <span class="id">W</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof34')">Proof.</div>
 <div class="proofscript" id="proof34">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">u</span>; <span class="tactic">intuition</span>; <span class="tactic">inversion</span> <span class="id">H0</span>.<br/>
@@ -995,12 +995,12 @@ Qed.</div>
     to remove the first <span class="bracket"><span class="id">n</span></span> variables from <span class="bracket"><span class="id">e</span></span> </div>
 <span class="kwd">Lemma</span> <span class="id">typ_shift_remove</span>:<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">u</span> : <span class="id">term</span>) (<span class="id">W</span> : <span class="id">typ</span>) (<span class="id">n</span> : <span class="id">nat</span>),<br/>
-&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">typing</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">u</span> <span class="id">W</span> -&gt; <span class="id">typing</span> <span class="id">e</span> (<span class="id">shift</span> <span class="id">u</span> <span class="id">n</span>) <span class="id">W</span>.<br/>
+&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">typing</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">u</span> <span class="id">W</span> -&gt; <span class="id">typing</span> <span class="id">e</span> (<span class="id">shift</span> <span class="id">u</span> <span class="id">n</span>) <span class="id">W</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof35')">Proof.</div>
 <div class="proofscript" id="proof35">
 &nbsp;&nbsp;<span class="tactic">intuition</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">exists</span> <span class="id">e</span>', <span class="id">e</span>'= <span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="kwd">as</span> [<span class="id">x</span> <span class="id">H1</span>].<br/>
-&nbsp;&nbsp;- <span class="id">exists</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>); <span class="tactic">trivial</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">exists</span> <span class="id">e</span>', <span class="id">e</span>'= <span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="kwd">as</span> [<span class="id">x</span> <span class="id">H1</span>].<br/>
+&nbsp;&nbsp;- <span class="id">exists</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>); <span class="tactic">trivial</span>.<br/>
 &nbsp;&nbsp;- <span class="tactic">intros</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> &lt;- <span class="id">H1</span> <span class="kwd">in</span> <span class="id">H0</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">n</span> <span class="id">e</span> <span class="id">H1</span> <span class="id">H</span>; <span class="tactic">induction</span> <span class="id">H0</span>; <span class="tactic">firstorder</span>; <span class="tactic">simpl</span>.<br/>
@@ -1008,8 +1008,8 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">H1</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">le_gt_dec</span> <span class="id">n</span> <span class="id">x</span>).<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">erewrite</span> &lt;- <span class="id">get_remove</span>; <span class="tactic">eauto</span>; <span class="tactic">omega</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">erewrite</span> <span class="id">get_remove_2</span>; <span class="tactic">eauto</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">erewrite</span> &lt;- <span class="id">get_typ_add</span>; <span class="tactic">eauto</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id">erewrite</span> <span class="id">get_typ_remove</span>; <span class="tactic">eauto</span>; <span class="tactic">omega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">apply</span> <span class="id">H2</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">apply</span> <span class="id">typed_abs</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHtyping</span>.<br/>
@@ -1030,26 +1030,26 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">H1</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Well-formedness is invariant by <span class="bracket"><span class="id">remove_var</span></span> </div>
+<div class="doc">Well-formedness is invariant by <span class="bracket"><span class="id">remove_typ</span></span> </div>
 <span class="kwd">Lemma</span> <span class="id">wf_typ_remove</span>:<br/>
-&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span> <span class="id">e</span> <span class="id">n</span>, <span class="id">wf_typ</span> <span class="id">e</span> <span class="id">t</span> -&gt; <span class="id">wf_typ</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">t</span>.<br/>
+&nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">t</span> <span class="id">e</span> <span class="id">n</span>, <span class="id">wf_typ</span> <span class="id">e</span> <span class="id">t</span> -&gt; <span class="id">wf_typ</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="id">t</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof36')">Proof.</div>
 <div class="proofscript" id="proof36">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">t</span>; <span class="tactic">firstorder</span>; <span class="tactic">simpl</span> <span class="kwd">in</span> *.<br/>
 &nbsp;&nbsp;<span class="id">now</span> <span class="tactic">rewrite</span> &lt;- <span class="id">get_kind_remove</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Theorem</span> <span class="id">wf_env_remove</span>: <span class="kwd">forall</span> <span class="id">n</span> <span class="id">e</span>, <span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">wf_env</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>).<br/>
+<span class="kwd">Theorem</span> <span class="id">wf_env_remove</span>: <span class="kwd">forall</span> <span class="id">n</span> <span class="id">e</span>, <span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">wf_env</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof37')">Proof.</div>
 <div class="proofscript" id="proof37">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">n</span>; <span class="tactic">induction</span> <span class="id">e</span>; <span class="tactic">firstorder</span>. <br/>
 &nbsp;&nbsp;<span class="id">now</span> <span class="tactic">apply</span> <span class="id">wf_typ_remove</span>.<br/>
 Qed.</div>
 <br/>
-<div class="doc">Kinding is invariant by <span class="bracket"><span class="id">remove_var</span></span>. </div>
+<div class="doc">Kinding is invariant by <span class="bracket"><span class="id">remove_typ</span></span>. </div>
 <span class="kwd">Theorem</span> <span class="id">kinding_remove</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">tp2</span> <span class="id">e</span> <span class="id">k</span> <span class="id">n</span>',<br/>
-&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">kinding</span> <span class="id">e</span> <span class="id">tp2</span> <span class="id">k</span> -&gt; <span class="id">kinding</span> (<span class="id">remove_var</span> <span class="id">n</span>' <span class="id">e</span>) <span class="id">tp2</span> <span class="id">k</span>.<br/>
+&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">kinding</span> <span class="id">e</span> <span class="id">tp2</span> <span class="id">k</span> -&gt; <span class="id">kinding</span> (<span class="id">remove_typ</span> <span class="id">n</span>' <span class="id">e</span>) <span class="id">tp2</span> <span class="id">k</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof38')">Proof.</div>
 <div class="proofscript" id="proof38">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">tp2</span>; <span class="tactic">firstorder</span>; <span class="tactic">inversion</span> <span class="id">H0</span>. <br/>
@@ -1089,8 +1089,8 @@ Qed.</div>
 <span class="kwd">Theorem</span> <span class="id">subst_preserves_typing</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">x</span> : <span class="id">nat</span>) (<span class="id">t</span> <span class="id">u</span> : <span class="id">term</span>) (<span class="id">V</span> <span class="id">W</span> : <span class="id">typ</span>),<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typing</span> <span class="id">e</span> <span class="id">t</span> <span class="id">V</span> -&gt; <br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typing</span> (<span class="id">remove_var</span> <span class="id">x</span> <span class="id">e</span>) <span class="id">u</span> <span class="id">W</span> -&gt; <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span> = <span class="id">Some</span> <span class="id">W</span> -&gt;<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typing</span> (<span class="id">remove_var</span> <span class="id">x</span> <span class="id">e</span>) (<span class="tactic">subst</span> <span class="id">t</span> <span class="id">x</span> <span class="id">u</span>) <span class="id">V</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typing</span> (<span class="id">remove_typ</span> <span class="id">x</span> <span class="id">e</span>) <span class="id">u</span> <span class="id">W</span> -&gt; <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span> = <span class="id">Some</span> <span class="id">W</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">typing</span> (<span class="id">remove_typ</span> <span class="id">x</span> <span class="id">e</span>) (<span class="tactic">subst</span> <span class="id">t</span> <span class="id">x</span> <span class="id">u</span>) <span class="id">V</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof41')">Proof.</div>
 <div class="proofscript" id="proof41">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">e</span> <span class="id">n</span> <span class="id">t</span> <span class="id">u</span> <span class="id">V</span> <span class="id">W</span> <span class="id">H</span> ; <span class="id">revert</span> <span class="id">n</span> <span class="id">u</span> <span class="id">W</span>; <span class="tactic">induction</span> <span class="id">H</span>; <span class="tactic">intros</span> <span class="id">n</span>' <span class="id">u</span> <span class="id">W</span> <span class="id">H1</span> <span class="id">E1</span>; <span class="tactic">simpl</span>.<br/>
@@ -1101,7 +1101,7 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;+ <span class="tactic">case</span> <span class="id">le_gt_dec</span>; <span class="tactic">intros</span> <span class="id">H3</span>; <span class="tactic">apply</span> <span class="id">typed_var</span>;<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">try</span> (<span class="tactic">eapply</span> <span class="id">typing_wf_env</span>; <span class="tactic">eauto</span>).<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> &lt;- (<span class="id">get_typ_wk</span> <span class="id">e</span> <span class="id">x</span> <span class="id">n</span>'); <span class="tactic">auto</span>; <span class="tactic">omega</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">get_remove</span>; <span class="tactic">try</span> <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">get_typ_add</span>; <span class="tactic">try</span> <span class="tactic">omega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">S</span> (<span class="id">x</span> - 1) = <span class="id">x</span>) <span class="kwd">as</span> <span class="id">eq</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">eq</span>; <span class="tactic">assumption</span>.<br/>
@@ -1127,9 +1127,9 @@ Qed.</div>
 Qed.</div>
 <br/>
 <div class="doc">The statement of the following two lemmas has been inspired by Vouillon </div>
-<span class="kwd">Lemma</span> <span class="id">get_var_remove_var_lt</span> :<br/>
+<span class="kwd">Lemma</span> <span class="id">get_var_remove_typ_lt</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">x</span> <span class="id">x</span>' : <span class="id">nat</span>),<br/>
-&nbsp;&nbsp;<span class="id">x</span> &lt; <span class="id">x</span>' -&gt; <span class="id">get_typ</span> (<span class="id">remove_var</span> <span class="id">x</span>' <span class="id">e</span>) <span class="id">x</span> = <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span>.<br/>
+&nbsp;&nbsp;<span class="id">x</span> &lt; <span class="id">x</span>' -&gt; <span class="id">get_typ</span> (<span class="id">remove_typ</span> <span class="id">x</span>' <span class="id">e</span>) <span class="id">x</span> = <span class="id">get_typ</span> <span class="id">e</span> <span class="id">x</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof42')">Proof.</div>
 <div class="proofscript" id="proof42">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">e</span>; <span class="tactic">simpl</span>; <span class="tactic">trivial</span>; <span class="tactic">intros</span> <span class="id">x</span> <span class="id">x</span>' <span class="id">H</span>.<br/>
@@ -1141,9 +1141,9 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">omega</span>.<br/>
 Qed.</div>
 <br/>
-<span class="kwd">Lemma</span> <span class="id">get_var_remove_var_ge</span> :<br/>
+<span class="kwd">Lemma</span> <span class="id">get_var_remove_typ_ge</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">x</span> <span class="id">x</span>' : <span class="id">nat</span>),<br/>
-&nbsp;&nbsp;<span class="id">x</span> &gt;= <span class="id">x</span>' -&gt; <span class="id">get_typ</span> (<span class="id">remove_var</span> <span class="id">x</span>' <span class="id">e</span>) <span class="id">x</span> = <span class="id">get_typ</span> <span class="id">e</span> (1 + <span class="id">x</span>).<br/>
+&nbsp;&nbsp;<span class="id">x</span> &gt;= <span class="id">x</span>' -&gt; <span class="id">get_typ</span> (<span class="id">remove_typ</span> <span class="id">x</span>' <span class="id">e</span>) <span class="id">x</span> = <span class="id">get_typ</span> <span class="id">e</span> (1 + <span class="id">x</span>).<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof43')">Proof.</div>
 <div class="proofscript" id="proof43">
 &nbsp;&nbsp;<span class="tactic">induction</span> <span class="id">e</span>; <span class="tactic">simpl</span>; <span class="tactic">trivial</span>; <span class="tactic">intros</span> <span class="id">x</span> <span class="id">x</span>' <span class="id">H</span>.<br/>
@@ -1155,19 +1155,19 @@ Qed.</div>
 <br/>
 <span class="kwd">Theorem</span> <span class="id">typing_weakening_var_ind</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> (<span class="id">e</span> : <span class="id">env</span>) (<span class="id">x</span> : <span class="id">nat</span>) (<span class="id">t</span> : <span class="id">term</span>) (<span class="id">U</span> : <span class="id">typ</span>),<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">typing</span> (<span class="id">remove_var</span> <span class="id">x</span> <span class="id">e</span>) <span class="id">t</span> <span class="id">U</span> -&gt; <span class="id">typing</span> <span class="id">e</span> (<span class="id">shift</span> <span class="id">t</span> <span class="id">x</span>) <span class="id">U</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">wf_env</span> <span class="id">e</span> -&gt; <span class="id">typing</span> (<span class="id">remove_typ</span> <span class="id">x</span> <span class="id">e</span>) <span class="id">t</span> <span class="id">U</span> -&gt; <span class="id">typing</span> <span class="id">e</span> (<span class="id">shift</span> <span class="id">t</span> <span class="id">x</span>) <span class="id">U</span>.<br/>
 <div class="toggleproof" onclick="toggleDisplay('proof44')">Proof.</div>
 <div class="proofscript" id="proof44">
 &nbsp;&nbsp;<span class="tactic">intros</span> <span class="id">e</span> <span class="id">n</span> <span class="id">t</span> <span class="id">U</span> <span class="id">H1</span> <span class="id">H2</span>.<br/>
-&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">exists</span> <span class="id">e</span>', <span class="id">e</span>' = <span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>) <span class="kwd">as</span> [<span class="id">e</span>' <span class="id">E</span>].<br/>
-&nbsp;&nbsp;+ <span class="id">exists</span> (<span class="id">remove_var</span> <span class="id">n</span> <span class="id">e</span>); <span class="tactic">trivial</span>.<br/>
+&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">exists</span> <span class="id">e</span>', <span class="id">e</span>' = <span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>) <span class="kwd">as</span> [<span class="id">e</span>' <span class="id">E</span>].<br/>
+&nbsp;&nbsp;+ <span class="id">exists</span> (<span class="id">remove_typ</span> <span class="id">n</span> <span class="id">e</span>); <span class="tactic">trivial</span>.<br/>
 &nbsp;&nbsp;+ <span class="tactic">rewrite</span> &lt;- <span class="id">E</span> <span class="kwd">in</span> <span class="id">H2</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">revert</span> <span class="id">n</span> <span class="id">e</span> <span class="id">E</span> <span class="id">H1</span>; <span class="tactic">induction</span> <span class="id">H2</span>; <span class="tactic">intros</span> <span class="id">n</span>' <span class="id">e</span>' <span class="id">E</span> <span class="id">H1</span>; <span class="tactic">simpl</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">typed_var</span>; <span class="tactic">trivial</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">rewrite</span> <span class="id">E</span> <span class="kwd">in</span> <span class="id">H</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> <span class="id">le_gt_dec</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">get_var_remove_var_ge</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">trivial</span>; <span class="tactic">omega</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">get_var_remove_var_lt</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">trivial</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">get_var_remove_typ_ge</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">trivial</span>; <span class="tactic">omega</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">get_var_remove_typ_lt</span> <span class="kwd">in</span> <span class="id">H</span>; <span class="tactic">trivial</span>; <span class="tactic">omega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">apply</span> <span class="id">typed_abs</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">IHtyping</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* <span class="tactic">rewrite</span> <span class="id">E</span>; <span class="tactic">trivial</span>.<br/>
@@ -1233,7 +1233,7 @@ Qed.</div>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">regularity_base_case</span> <span class="id">tp1</span> <span class="id">e</span> <span class="id">H2</span> <span class="id">H1</span>) <span class="kwd">as</span> [<span class="id">k2</span> <span class="id">ihk2</span>].<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="id">exists</span> (<span class="id">max</span> <span class="id">k2</span> <span class="id">k1</span>).<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">kinded_arrow</span>; <span class="tactic">trivial</span>.<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">e</span> = <span class="id">remove_var</span> 0 (<span class="id">v</span> <span class="id">tp1</span> <span class="id">e</span>)) <span class="kwd">as</span> <span class="id">eq</span>; <span class="tactic">firstorder</span>; <span class="tactic">rewrite</span> <span class="id">eq</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">assert</span> (<span class="id">e</span> = <span class="id">remove_typ</span> 0 (<span class="id">v</span> <span class="id">tp1</span> <span class="id">e</span>)) <span class="kwd">as</span> <span class="id">eq</span>; <span class="tactic">firstorder</span>; <span class="tactic">rewrite</span> <span class="id">eq</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">kinding_remove</span>; <span class="tactic">firstorder</span>.<br/>
 &nbsp;&nbsp;+ <span class="tactic">destruct</span> <span class="id">IHtyping1</span> <span class="kwd">as</span> [<span class="id">k1</span> <span class="id">ihk1</span>].<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">inversion</span> <span class="id">ihk1</span>.<br/>
