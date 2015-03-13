@@ -889,7 +889,10 @@ Qed.</div>
 &nbsp;&nbsp;<span class="tactic">eapply</span> <span class="id">env_subst_wf_typ</span>; <span class="tactic">eauto</span>.<br/>
 Qed.</div>
 <br/>
+<br/>
 <div class="doc">part 1 of Lemma 4 (Substitution for Kinding) of the article </div>
+<div class="doc">The only use of this lemma is for the last case of the proof of the
+    regularity lemma. </div>
 <span class="kwd">Theorem</span> <span class="id">subst_kinding</span> :<br/>
 &nbsp;&nbsp;<span class="kwd">forall</span> <span class="id">X</span> <span class="id">T1</span> <span class="id">T2</span> <span class="id">p</span> <span class="id">k</span> <span class="id">e</span> <span class="id">e</span>',<br/>
 &nbsp;&nbsp;<span class="id">kinding</span> <span class="id">e</span> (<span class="id">tshift</span> <span class="id">T1</span> <span class="id">X</span>) <span class="id">p</span> -&gt;<br/>
@@ -901,12 +904,13 @@ Qed.</div>
 &nbsp;&nbsp;<span class="tactic">induction</span> 3. <span class="docright">(* Following closely the proof of the paper  *)</span><br/>
 &nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">destruct</span> (<span class="id">eq_nat_dec</span> <span class="id">X</span> <span class="id">X0</span>) <span class="kwd">as</span> [<span class="id">H4</span> | <span class="id">H4</span>].<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">admit</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;- <span class="id">admit</span>. <span class="docright">(* I don't understand the proof of the paper here.  *)</span><br/>
 &nbsp;&nbsp;&nbsp;&nbsp;- <span class="tactic">destruct</span> <span class="id">le_gt_dec</span>; <span class="tactic">eapply</span> <span class="id">kinded_var</span>; <span class="tactic">try</span> <span class="tactic">eapply</span> <span class="id">env_subst_wf_env</span>; <span class="tactic">eauto</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">env_subst_get_kind_lt</span>; <span class="tactic">eauto</span>; <span class="tactic">omega</span>.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id">erewrite</span> <span class="id">env_subst_get_kind_gt</span>; <span class="tactic">eauto</span>.<br/>
-&nbsp;&nbsp;+ <span class="id">admit</span>.<br/>
-&nbsp;&nbsp;+ <span class="id">admit</span>.<br/>
+&nbsp;&nbsp;+ <span class="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="tactic">apply</span> <span class="id">kinded_arrow</span>; <span class="tactic">firstorder</span>.<br/>
+&nbsp;&nbsp;+ <span class="id">admit</span>. <span class="docright">(* This case is supposed to be easy but there are problems with shifts.  *)</span><br/>
 Qed.</div>
 <br/>
 <h2> 1.3.2 Term substitution </h2>
