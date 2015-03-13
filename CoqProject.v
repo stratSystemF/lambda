@@ -894,7 +894,7 @@ Proof.
       * apply IHe; omega.
 Qed.
 
-Lemma get_remove :
+Lemma get_typ_add :
   forall e n x , S x > n -> get_typ (remove_typ n e) x = get_typ e (S x).
 Proof.
   induction e; induction n; induction x; firstorder.
@@ -910,7 +910,7 @@ Proof.
   - omega.
 Qed.
 
-Lemma get_remove_2 :
+Lemma get_typ_remove :
   forall e x  n , x < n -> get_typ e  x = get_typ (remove_typ n e) x .
 Proof.
   induction e; trivial; intros x' n' H.
@@ -970,8 +970,8 @@ Proof.
       rewrite H1 in H.
       simpl in *.
       destruct (le_gt_dec n x).
-      + erewrite <- get_remove; eauto; omega.
-      + erewrite get_remove_2; eauto; omega.
+      + erewrite <- get_typ_add; eauto; omega.
+      + erewrite get_typ_remove; eauto; omega.
       + apply H2.
     * apply typed_abs.
       apply IHtyping.
@@ -1058,7 +1058,7 @@ Proof.
     + case le_gt_dec; intros H3; apply typed_var;
       try (eapply typing_wf_env; eauto).
       * rewrite <- (get_typ_wk e x n'); auto; omega.
-      * rewrite get_remove; try omega.
+      * rewrite get_typ_add; try omega.
         assert (S (x - 1) = x) as eq.
         omega.
         rewrite eq; assumption.
