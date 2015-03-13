@@ -766,7 +766,7 @@ Qed.
 
 (** The following lemmas are deeply inspired by Vouillon
     even if the proof is ours alone.                     *)
-Lemma env_subst_get_bound_lt :
+Lemma env_subst_get_kind_lt :
   forall (X X' : nat) (e e' : env) (T : typ),
     (env_subst X' T e e') ->
     X < X' ->
@@ -779,7 +779,7 @@ Proof.
   omega.
 Qed.
 
-Lemma env_subst_get_bound_gt :
+Lemma env_subst_get_kind_gt :
   forall (X X' : nat) (e e' : env) (T : typ),
     env_subst X' T e e' ->
     X' < X ->
@@ -808,9 +808,9 @@ Proof.
     * now apply wf_typ_weakening_v_typ.
     * now apply wf_typ_weak_strength_var.
   - destruct (le_gt_dec n X); simpl.
-    * erewrite env_subst_get_bound_lt; eauto.
+    * erewrite env_subst_get_kind_lt; eauto.
       omega.
-    * erewrite env_subst_get_bound_gt; eauto.
+    * erewrite env_subst_get_kind_gt; eauto.
     + firstorder.
     + simpl; intros.
       eapply IHT1; eauto.
