@@ -847,6 +847,8 @@ Proof.
   induction 1; firstorder.
   eapply env_subst_wf_typ; eauto.
 Qed.
+
+(*
 Lemma tshift_tsubst_prop_1 :
   forall (n n' : nat) (T T' : typ),
   tshift (tsubst T (n + n') T') n =
@@ -854,6 +856,7 @@ Lemma tshift_tsubst_prop_1 :
 Proof.
   admit.
 Qed.
+*)
 
 (** part 1 of Lemma 4 (Substitution for Kinding) of the article *)
 (** The only use of this lemma is for the last case of the proof of the
