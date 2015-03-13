@@ -288,7 +288,7 @@ Proof.
     intuition; apply wf_typ_equiv; assumption.
 Qed.
 
-(** Kinding predicate *)
+(** **** Kinding predicate *)
 (** After Figure 5: Stratified System F Kinding Rules *)
 Inductive kinding (e : env) : typ -> nat -> Prop :=
 | kinded_var : forall X k p,
@@ -317,7 +317,7 @@ Proof.
   discriminate.
 Qed.
 
-(** Kind inference *)
+(** **** Kind inference *)
 (** This function computes the minimal kind for a type term. *)
 Fixpoint kind (e : env) (tp : typ) : (option nat) :=
   match tp with
@@ -389,7 +389,7 @@ Proof.
     reflexivity.
 Qed.
 
-(** Typing predicate *)
+(** **** Typing predicate *)
 (** After Figure 6: Stratified System F Type-Checking Rules *)
 Inductive typing : env -> term -> typ -> Prop :=
 | typed_var : forall e (tp : typ) (x : nat),
@@ -460,7 +460,7 @@ Proof.
       rewrite H2 in iht1; auto.
 Qed.
 
-(** Type inference *)
+(** **** Type inference *)
 Fixpoint type (e : env) (trm : term) {struct trm} : option typ :=
   match trm with
     | var x => if wf_env_bool e then get_typ e x else None
