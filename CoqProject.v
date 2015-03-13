@@ -847,8 +847,17 @@ Proof.
   induction 1; firstorder.
   eapply env_subst_wf_typ; eauto.
 Qed.
+Lemma tshift_tsubst_prop_1 :
+  forall (n n' : nat) (T T' : typ),
+  tshift (tsubst T (n + n') T') n =
+  tsubst (tshift T n) (1 + n + n') (tshift T' n).
+Proof.
+  admit.
+Qed.
 
 (** part 1 of Lemma 4 (Substitution for Kinding) of the article *)
+(** The only use of this lemma is for the last case of the proof of the
+    regularity lemma. *)
 Theorem subst_kinding :
   forall X T1 T2 p k e e',
   kinding e (tshift T1 X) p ->
@@ -859,12 +868,13 @@ Proof.
   induction 3. (**r Following closely the proof of the paper *)
   + simpl.
     destruct (eq_nat_dec X X0) as [H4 | H4].
-    - admit.
+    - admit. (**r I don't understand the proof of the paper here. *)
     - destruct le_gt_dec; eapply kinded_var; try eapply env_subst_wf_env; eauto.
       erewrite env_subst_get_kind_lt; eauto; omega.
       erewrite env_subst_get_kind_gt; eauto.
-  + admit.
-  + admit.
+  + simpl.
+    apply kinded_arrow; firstorder.
+  + admit. (**r This case is supposed to be easy but there are problems with shifts. *)
 Qed.
 
 (** ** 1.3.2 Term substitution *)
