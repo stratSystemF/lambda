@@ -850,24 +850,21 @@ Qed.
 
 (** part 1 of Lemma 4 (Substitution for Kinding) of the article *)
 Theorem subst_kinding :
-  forall X T1 T2 k e e',
+  forall X T1 T2 p k e e',
+  kinding e (tshift T1 X) p ->
   env_subst X T1 e e' ->
   kinding e T2 k ->
   kinding e' (tsubst T2 X T1) k.
-Proof.
-  admit.
-Qed.
-(* Proof started...
-  induction 2.
+  induction 3. (**r Following closely the proof of the paper *)
   + simpl.
-    destruct (eq_nat_dec X X0) as [H3 | H3].
-    - rewrite H3 in H; clear H3 X.
-      induction H.
-      * apply insert_kind_kinding with (e := e').
-        apply insert_0.
-        apply IHenv_subst; firstorder.
-      * 
-*)
+    destruct (eq_nat_dec X X0) as [H4 | H4].
+    - admit.
+    - destruct le_gt_dec; eapply kinded_var; try eapply env_subst_wf_env; eauto.
+      erewrite env_subst_get_kind_lt; eauto; omega.
+      erewrite env_subst_get_kind_gt; eauto.
+  + admit.
+  + admit.
+Qed.
 
 (** ** 1.3.2 Term substitution *)
 
@@ -1196,9 +1193,11 @@ Proof.
   + destruct IHtyping as [k1 ihk1].
     inversion ihk1.
     exists p.
-    eapply subst_kinding; eauto.
-    apply substv.
-    eapply kinding_wf_typ; eauto.
+    apply subst_kinding with (X := 0) (T1 := tp2) (e := v_typ k e) (p := k); trivial.
+    - eapply insert_kind_kinding; eauto.
+      apply insert_0.
+    - apply substv.
+      eapply kinding_wf_typ; eauto.
 Qed.
 
 (** *** Lemma 1.3 Narrowing *)
