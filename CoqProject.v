@@ -871,18 +871,18 @@ Qed.
 
 (** ** 1.3.2 Term substitution *)
 
-Fixpoint remove_var (x:nat) (e:env) {struct e} : env :=
+Fixpoint remove_typ (x:nat) (e:env) {struct e} : env :=
   match e with
     | empty => empty
-    | v_typ k e => v_typ k (remove_var x e)
+    | v_typ k e => v_typ k (remove_typ x e)
     | v t e => match x with
                  | 0 => e
-                 |S X => v t (remove_var X e)
+                 |S X => v t (remove_typ X e)
                end
   end.
 
 Lemma get_typ_wk :
-  forall e x y, x < y -> get_typ e x = get_typ (remove_var y e) x.
+  forall e x y, x < y -> get_typ e x = get_typ (remove_typ y e) x.
 Proof.
   induction e; intuition.
   + simpl in *.
@@ -895,7 +895,7 @@ Proof.
 Qed.
 
 Lemma get_remove :
-  forall e n x , S x > n -> get_typ (remove_var n e) x = get_typ e (S x).
+  forall e n x , S x > n -> get_typ (remove_typ n e) x = get_typ e (S x).
 Proof.
   induction e; induction n; induction x; firstorder.
   - simpl.
@@ -911,7 +911,7 @@ Proof.
 Qed.
 
 Lemma get_remove_2 :
-  forall e x  n , x < n -> get_typ e  x = get_typ (remove_var n e) x .
+  forall e x  n , x < n -> get_typ e  x = get_typ (remove_typ n e) x .
 Proof.
   induction e; trivial; intros x' n' H.
   - induction n'.
@@ -924,7 +924,7 @@ Proof.
 Qed. 
 
 Lemma get_kind_remove :
-  forall e x x', get_kind e x = get_kind (remove_var x' e) x.
+  forall e x x', get_kind e x = get_kind (remove_typ x' e) x.
 Proof.
   induction e.
   * induction x'; simpl; trivial.
@@ -935,7 +935,7 @@ Proof.
   * induction x'; intros; simpl; trivial.
 Qed.
 
-Lemma wf_typ_add : forall t e n, wf_typ (remove_var n e) t -> wf_typ e t.
+Lemma wf_typ_add : forall t e n, wf_typ (remove_typ n e) t -> wf_typ e t.
 Proof.
   induction t; firstorder.
   - simpl in *.
@@ -945,7 +945,7 @@ Qed.
 
 Theorem kinding_add:
   forall u e n  W ,
-  wf_env e -> kinding (remove_var n e) u W -> kinding e u W.
+  wf_env e -> kinding (remove_typ n e) u W -> kinding e u W.
 Proof.
   induction u; intuition; inversion H0.
   + eapply kinded_var; eauto.
@@ -958,11 +958,11 @@ Qed.
     to remove the first [n] variables from [e] *)
 Lemma typ_shift_remove:
   forall (e : env) (u : term) (W : typ) (n : nat),
-  wf_env e -> typing (remove_var n e) u W -> typing e (shift u n) W.
+  wf_env e -> typing (remove_typ n e) u W -> typing e (shift u n) W.
 Proof.
   intuition.
-  assert (exists e', e'= remove_var n e) as [x H1].
-  - exists (remove_var n e); trivial.
+  assert (exists e', e'= remove_typ n e) as [x H1].
+  - exists (remove_typ n e); trivial.
   - intros.
     rewrite <- H1 in H0.
     revert n e H1 H; induction H0; firstorder; simpl.
@@ -992,24 +992,24 @@ Proof.
       now rewrite <- H1.
 Qed.
 
-(** Well-formedness is invariant by [remove_var] *)
+(** Well-formedness is invariant by [remove_typ] *)
 Lemma wf_typ_remove:
-  forall t e n, wf_typ e t -> wf_typ (remove_var n e) t.
+  forall t e n, wf_typ e t -> wf_typ (remove_typ n e) t.
 Proof.
   induction t; firstorder; simpl in *.
   now rewrite <- get_kind_remove.
 Qed.
 
-Theorem wf_env_remove: forall n e, wf_env e -> wf_env (remove_var n e).
+Theorem wf_env_remove: forall n e, wf_env e -> wf_env (remove_typ n e).
 Proof.
   induction n; induction e; firstorder. 
   now apply wf_typ_remove.
 Qed.
 
-(** Kinding is invariant by [remove_var]. *)
+(** Kinding is invariant by [remove_typ]. *)
 Theorem kinding_remove :
   forall tp2 e k n',
-  wf_env e -> kinding e tp2 k -> kinding (remove_var n' e) tp2 k.
+  wf_env e -> kinding e tp2 k -> kinding (remove_typ n' e) tp2 k.
 Proof.
   induction tp2; firstorder; inversion H0. 
   + eapply kinded_var; eauto.
@@ -1047,8 +1047,8 @@ Qed.
 Theorem subst_preserves_typing :
   forall (e : env) (x : nat) (t u : term) (V W : typ),
     typing e t V -> 
-    typing (remove_var x e) u W -> get_typ e x = Some W ->
-    typing (remove_var x e) (subst t x u) V.
+    typing (remove_typ x e) u W -> get_typ e x = Some W ->
+    typing (remove_typ x e) (subst t x u) V.
 Proof.
   intros e n t u V W H ; revert n u W; induction H; intros n' u W H1 E1; simpl.
   - destruct (eq_nat_dec x n') as [H2 | H2].
@@ -1084,9 +1084,9 @@ Proof.
 Qed.
 
 (** The statement of the following two lemmas has been inspired by Vouillon *)
-Lemma get_var_remove_var_lt :
+Lemma get_var_remove_typ_lt :
   forall (e : env) (x x' : nat),
-  x < x' -> get_typ (remove_var x' e) x = get_typ e x.
+  x < x' -> get_typ (remove_typ x' e) x = get_typ e x.
 Proof.
   induction e; simpl; trivial; intros x x' H.
   + destruct x'.
@@ -1097,9 +1097,9 @@ Proof.
     omega.
 Qed.
 
-Lemma get_var_remove_var_ge :
+Lemma get_var_remove_typ_ge :
   forall (e : env) (x x' : nat),
-  x >= x' -> get_typ (remove_var x' e) x = get_typ e (1 + x).
+  x >= x' -> get_typ (remove_typ x' e) x = get_typ e (1 + x).
 Proof.
   induction e; simpl; trivial; intros x x' H.
   + rewrite IHe; trivial.
@@ -1110,18 +1110,18 @@ Qed.
 
 Theorem typing_weakening_var_ind :
   forall (e : env) (x : nat) (t : term) (U : typ),
-    wf_env e -> typing (remove_var x e) t U -> typing e (shift t x) U.
+    wf_env e -> typing (remove_typ x e) t U -> typing e (shift t x) U.
 Proof.
   intros e n t U H1 H2.
-  assert (exists e', e' = remove_var n e) as [e' E].
-  + exists (remove_var n e); trivial.
+  assert (exists e', e' = remove_typ n e) as [e' E].
+  + exists (remove_typ n e); trivial.
   + rewrite <- E in H2.
     revert n e E H1; induction H2; intros n' e' E H1; simpl.
     - apply typed_var; trivial.
       rewrite E in H.
       destruct le_gt_dec.
-      * rewrite get_var_remove_var_ge in H; trivial; omega.
-      * rewrite get_var_remove_var_lt in H; trivial; omega.
+      * rewrite get_var_remove_typ_ge in H; trivial; omega.
+      * rewrite get_var_remove_typ_lt in H; trivial; omega.
     - apply typed_abs.
       apply IHtyping.
       * rewrite E; trivial.
@@ -1185,7 +1185,7 @@ Proof.
     destruct (regularity_base_case tp1 e H2 H1) as [k2 ihk2].
     exists (max k2 k1).
     apply kinded_arrow; trivial.
-    assert (e = remove_var 0 (v tp1 e)) as eq; firstorder; rewrite eq.
+    assert (e = remove_typ 0 (v tp1 e)) as eq; firstorder; rewrite eq.
     apply kinding_remove; firstorder.
   + destruct IHtyping1 as [k1 ihk1].
     inversion ihk1.
