@@ -74,23 +74,27 @@ formation
 \item Après la cloture transitive, ça change pas grand chose.
 \item A l'origine d'une petite pénibilité TODO préciser ça
 \end{itemize}
+\pause
 \item Nous nous sommes basés sur \emph{A tutorial implementation of a
 dependently typed lambda-calculus} (Löh et al.) pour la neutralité et la
 normalité. On a étendu ça "naturellement".
 \end{itemize}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
 \begin{verbatim}
 Inductive normal : term -> Prop :=
 | directlyNeutral: forall t, neutral t -> normal t
-| absNorm : forall v phi, normal v -> normal (abs phi v)
-| absTNorm : forall v k, normal v -> normal (dept k v)
-with neutral : term -> Prop := (**r A neutral term is one that is not an
-abstraction. *)
+| absNorm : forall v phi, normal v 
+		-> normal (abs phi v)
+| absTNorm : forall v k, normal v 
+		-> normal (dept k v)
+with neutral : term -> Prop :=
 | nV: forall n, neutral (var n)
-| nApplt: forall phi t, neutral t -> neutral (applt t phi)
-| nApp: forall t t', neutral t -> normal t' -> neutral (Top.app t t').
+| nApplt: forall phi t, neutral t 
+	  -> neutral (applt t phi)
+| nApp: forall t t', neutral t -> normal t' 
+	-> neutral (Top.app t t').
 \end{verbatim}
 \end{frame}
 
