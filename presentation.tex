@@ -1,0 +1,103 @@
+\documentclass{beamer}
+ 
+ \usepackage[utf8]{inputenc} 
+ \usepackage[T1]{fontenc}
+ \usepackage{lmodern}
+ \usepackage{graphicx}
+ \usepackage[french]{babel}
+  
+  \usetheme{Warsaw}
+   
+   \begin{document}
+
+	\title{Apprenons à utiliser Coq.}
+	\author{Théo Zimmermann, Thomas Bourgeat}
+\frame{\titlepage}
+
+\section{Résumé}
+
+\begin{frame}
+Objectif du projet
+\begin{itemize}
+\item Apprendre le langage Coq.
+\pause
+\item Apprendre à formaliser un problème en Coq.
+\pause
+\item {\scriptsize Prouver des résultats simples sur le système F (lemmes de
+préservation, d'affaiblissement ...)}
+\item {\tiny Prouver la normalisation du système F}
+\end{itemize}
+
+
+\end{frame}
+
+    \begin{frame}
+    \frametitle{Qu'avons-nous faits?}
+    Pragmatiquement:
+	\begin{itemize}
+	\pause
+	\item Définitions (partie 1.2)
+	\begin{itemize}
+	\item Complétude de l'inférence de kind mais pas de l'inférence
+	de types. (Parce que non demandé et qu'on bloquait dessus)
+	\end{itemize}
+	\pause
+	\item Partie 1.3.2 incomplète
+	\begin{itemize}
+	\item Remplir ça
+	\end{itemize}
+	\end{itemize}
+	Le projet final fait environ 1300 lignes.
+    \end{frame}
+     
+		
+\section{Choix de formalisation}
+
+
+\begin{frame}{De bruijn}
+\begin{itemize}
+\item De bruijn parce que Vouillon.
+\pause
+\item On a gardé la définition sans prédicats inductifs de la bonne
+formation
+\pause
+\begin{itemize}
+\item on a regretté ce choix.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Réduction parallèle}
+\begin{itemize}
+\item Réduction simultanée des deux côté d'une application.
+\begin{itemize}
+\item Après la cloture transitive, ça change pas grand chose.
+\item A l'origine d'une petite pénibilité TODO préciser ça
+\end{itemize}
+\item Nous nous sommes basés sur \emph{A tutorial implementation of a
+dependently typed lambda-calculus} (Löh et al.) pour la neutralité et la
+normalité. On a étendu ça "naturellement".
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\begin{verbatim}
+Inductive normal : term -> Prop :=
+| directlyNeutral: forall t, neutral t -> normal t
+| absNorm : forall v phi, normal v -> normal (abs phi v)
+| absTNorm : forall v k, normal v -> normal (dept k v)
+with neutral : term -> Prop := (**r A neutral term is one that is not an
+abstraction. *)
+| nV: forall n, neutral (var n)
+| nApplt: forall phi t, neutral t -> neutral (applt t phi)
+| nApp: forall t t', neutral t -> normal t' -> neutral (Top.app t t').
+\end{verbatim}
+\end{frame}
+
+\section{Problèmes et difficultés}
+
+\begin{frame}
+\end{frame}
+
+\end{document}
+
