@@ -1,14 +1,14 @@
 Project for the MPRI course 2.7.2.
 
-#Source code
+# Source code
 
 [Please see the formatted source here.](http://stratSystemF.github.io/lambda)
 
 As for the raw source file, you can find it in this repository.
 
-#Report
+# Report
 
-##Introduction
+## Introduction
 
 This project has been the first contact with Coq for the two of us. We started
 reading the article. We talked together to precise our understanding of the type
@@ -19,7 +19,7 @@ good way to program, but we wrote tons of
 useless things, and we wanted to wait for the end of the project to be sure that
 these things were actually useless.
 
-##Definitions
+## Definitions
 
 We often had the choice between defining an inductive predicate or a
 function into ```Prop``` with ```Fixpoint``` (for instance for the ```kinding``` and
@@ -49,7 +49,7 @@ It was a little bit
 painful, but it seems that it is because the problem is intrinsically painful. 
 
 
-##Kind and type inference
+## Kind and type inference
 
 We spent a lot of time on that part (way too much).
 We finally managed to do it by duplicating the definition of everything
@@ -66,7 +66,7 @@ Thus, we are convinced that with more knowledge of Coq we would have been
 able to do better on that part. But we had spent too much time on it already,
 so we decide to be content with that and move on.
 
-##Type and term substitution
+## Type and term substitution
 
 The difficulties laid:
 
@@ -94,12 +94,12 @@ Indeed, the main difference between the system we studied and the system Vouillo
 appeared only when we dealt with kinds.
 
 
-##Reduction and normal terms
+## Reduction and normal terms
 
 This part was easier, in our opinion, than the other parts. It is probably
 because, at this point we had stronger basics in Coq.
 
-##What is hard with Coq in general
+## What is hard with Coq in general
 
 The syntax is strange and we need to know a lot of different constructions so that
 we are able to move forward. There are one thousand ways to do things which are
@@ -124,7 +124,7 @@ function, an optimized function, and to use QuickCheck to test if on some random
 examples it works. It seems that there is research on this subject in Coq but we
 did not try what they are doing (Quikchick).
 
-##Conclusion
+## Conclusion
 
 Several time we had the feeling that we were playing a game, without knowing the
 actual rules: the existing keywords we could use. Our learning of Coq was driven
@@ -136,12 +136,3 @@ There are several things which are not satisfying in our code: the style is not
 uniform (we did not find our style), the code organization is not perfect, we probably missed some big
 shortcuts... If we should redo the project now, it would be a lot easier, with
 the basics of Coq.
-
-
-
-
- 
-
-
-
-
